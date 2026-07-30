@@ -13,7 +13,7 @@ Return ONLY valid JSON in this exact shape, no markdown, no extra text:
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
-    
+
     {
       method: 'POST',
       headers: {
@@ -25,7 +25,8 @@ Return ONLY valid JSON in this exact shape, no markdown, no extra text:
       })
     }
   );
-
-  const data = await response.json();
-  res.status(200).json(data);
+const data = await response.json();
+  const rawText = data.candidates[0].content.parts[0].text;
+  const recipe = JSON.parse(rawText);
+  res.status(200).json(recipe);
 }
