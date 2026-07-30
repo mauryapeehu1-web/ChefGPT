@@ -1,0 +1,511 @@
+<html>
+  <head>
+    
+    <link rel="stylesheet" href="./style.css">
+    
+    <title>AI recipe maker</title>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">🍕ChefGPT</div>
+        <ul class="nav-links">
+          <li><a href="#hero">Home</a></li>
+          <li><a href="#recipe-book">Recipes</a></li>
+          <li><a href="#drinks">Drinks</a></li>
+        </ul>
+      <button class="cta-btn" id="cta-btn">login</button>
+    </nav>
+    <div class="user-panel" id="userPanel">
+  <button class="close-panel" id="closePanel">x</button>
+
+  <div class="user-avatar">👤</div>
+  <h3>Welcome back!</h3>
+
+  <div class="panel-section">
+    <button class="panel-toggle">
+      Your Saved Recipes
+      <span class="toggle-icon">X</span>
+    </button>
+    <ul class="panel-list">
+      <li>🍣 Sushi</li>
+      <li>🥩 Beef Steak</li>
+      <li>🥗 Vegetable Salad</li>
+    </ul>
+  </div>
+
+  <div class="panel-section">
+    <button class="panel-toggle">
+      your Shared recipe
+      <span class="toggle-icon">x</span>
+    </button>
+    <ul class="panel-list">
+      <li>🍰 Choco Salad</li>
+      <li>🍹 Mango Mojito</li>
+    </ul>
+  </div>
+
+  <button class="logout-btn" id="logoutBtn">Logout</button>
+</div>
+    <section class="hero" id="hero">  
+      <div class="hero-text">
+          <span class="badge">Create Recipes With ChefGPT</span>
+          <h1>Input ingredients,<br> output inspiration. </h1>
+          <p>Let ChefGPT turn what's in your fridge into a masterpiece.</p>
+        <div class="search-box">
+            <input type="text" placeholder="Search recipes...">
+            <button>🔍</button>
+        </div>
+      </div>
+      <div class="hero-image-panel"></div>
+      </section>
+      <svg class="section-drip" viewBox="0 0 1440 90" preserveAspectRatio="none">
+    <path d="M0,0
+      L0,10
+      C40,10 40,45 80,45 C120,45 120,10 160,10
+      C200,10 200,70 240,70 C280,70 280,10 320,10
+      C350,10 350,30 380,30 C410,30 410,10 440,10
+      C480,10 480,55 520,55 C560,55 560,10 600,10
+      C630,10 630,25 660,25 C690,25 690,10 720,10
+      C760,10 760,60 800,60 C840,60 840,10 880,10
+      C910,10 910,35 940,35 C970,35 970,10 1000,10
+      C1040,10 1040,50 1080,50 C1120,50 1120,10 1160,10
+      C1190,10 1190,28 1220,28 C1250,28 1250,10 1280,10
+      C1320,10 1320,42 1360,42 C1400,42 1400,10 1440,10
+      L1440,0 Z" fill="#264653"></path>
+  </svg>
+
+    <section class="how-it-works">
+  <h2 class="scroll-animate" data-anim="tracking-in-contract-bck">How it works</h2>
+  <p class="section-subtitle">From fridge to plate in three simple steps</p>
+
+  <div class="steps-grid reveal">
+    <div class="step-card">
+      <div class="step-icon">🥕</div>
+      <h3>1. Pick your ingredients</h3>
+      <p>Tap what you already have at home — no need to have everything.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-icon">✨</div>
+      <h3>2. Let AI do the thinking</h3>
+      <p>Our AI instantly builds a recipe or mocktail from what you selected.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-icon">🍽️</div>
+      <h3>3. Cook and enjoy</h3>
+      <p>Follow the step-by-step instructions and enjoy your creation.</p>
+    </div>
+  </div>
+        <button id="items" class="pulsate-fwd">Let's Start</button>
+    <section class="quick-suggestions">
+  <div class="suggestions-left">
+    <span class="eyebrow">QUICK IDEAS</span>
+    <h2 class="scroll-animate" data-anim="tracking-in-contract-bck">Already Have These? Make This</h2>
+    <p class="section-subtitle">A few classics you can make right now with staples from your kitchen</p>
+
+    <div class="suggestion-list reveal">
+<div class="suggestion-row" data-ingredients="Onion,Tomato,Potato">
+  <div class="suggestion-have">
+    <span>🧅 Onion</span><span>🍅 Tomato</span><span>🥔 Potato</span>
+  </div>
+  <div class="suggestion-arrow">➜</div>
+  <div class="suggestion-dish">🍛 Aloo Tamatar Sabzi</div>
+</div>
+
+<div class="suggestion-row" data-ingredients="Toor Dal,Rice,Turmeric">
+  <div class="suggestion-have">
+    <span>🫘 Toor Dal</span><span>🍚 Rice</span><span>🟡 Turmeric</span>
+  </div>
+  <div class="suggestion-arrow">➜</div>
+  <div class="suggestion-dish">🍚 Dal Chawal</div>
+</div>
+
+<div class="suggestion-row" data-ingredients="Besan (Gram Flour),Onion,Green Chilli">
+  <div class="suggestion-have">
+    <span>🌾 Besan</span><span>🧅 Onion</span><span>🌶️ Green Chilli</span>
+  </div>
+  <div class="suggestion-arrow">➜</div>
+  <div class="suggestion-dish">🧅 Onion Pakora</div>
+</div>
+
+<div class="suggestion-row" data-ingredients="Curd (Yogurt),Rice,Curry Leaves">
+  <div class="suggestion-have">
+    <span>🍦 Curd</span><span>🍚 Rice</span><span>🌿 Curry Leaves</span>
+  </div>
+  <div class="suggestion-arrow">➜</div>
+  <div class="suggestion-dish">🍚 Curd Rice</div>
+</div>
+
+<div class="suggestion-row" data-ingredients="Paneer,Capsicum,Onion">
+  <div class="suggestion-have">
+    <span>🧀 Paneer</span><span>🫑 Capsicum</span><span>🧅 Onion</span>
+  </div>
+  <div class="suggestion-arrow">➜</div>
+  <div class="suggestion-dish">🧀 Paneer Bhurji</div>
+</div>
+
+<div class="suggestion-row" data-ingredients="Poha,Onion,Peas">
+  <div class="suggestion-have">
+    <span>🍚 Poha</span><span>🧅 Onion</span><span>🟢 Peas</span>
+  </div>
+  <div class="suggestion-arrow">➜</div>
+  <div class="suggestion-dish">🍚 Poha</div>
+</div>
+    </div>
+  </div>
+
+  <div class="suggestions-image"></div>
+</section>
+    </section>
+    <section class="categories">
+  <span class="eyebrow">CUSTOMER FAVORITES</span>
+  <h2 class="scroll-animate" data-anim="tracking-in-contract-bck-bottom">Popular Categories</h2>
+
+  <div class="categories-grid reveal">
+    <div class="category-card">
+      <div class="category-icon">🍔</div>
+      <h3>Main Dish</h3>
+      <p>(90 items)</p>
+    </div>
+    <div class="category-card">
+      <div class="category-icon">🥪</div>
+      <h3>Salad</h3>
+      <p>(40 items)</p>
+    </div>
+    <div class="category-card">
+      <div class="category-icon">🍰</div>
+      <h3>Dessert</h3>
+      <p>(50 items)</p>
+    </div>
+    <div class="category-card">
+      <div class="category-icon">🧃</div>
+      <h3>Juice</h3>
+      <p>(120 items)</p>
+    </div>
+  </div>
+
+  <button id="see-more-categories">See More</button>
+</section>
+
+    <section class="drinks" id="drinks">
+  <span class="drinkie">Refresh Yourself</span>
+  <h2>Popular Drinks</h2>
+
+  <div class="drinks-grid reveal">
+    <div class="drink-card">
+      <div class="drink-image" style="background-image:url('https://images.unsplash.com/photo-1579630942078-100a2f8e9052?crop=entropy&cs=srgb&fm=jpg&ixid=M3wzMjM4NDZ8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODQ5MTMxMzB8&ixlib=rb-4.1.0&q=85')">
+        <video muted loop playsinline preload="none" src="https://www.youtube.com/shorts/r9xkpEIJ--g?feature=share"></video>
+      </div>
+      <h3>Mango Mojito</h3>
+      <p>Mocktail</p>
+      
+    </div>
+
+    <div class="drink-card">
+      <div class="drink-image" style="background-image:url('https://images.unsplash.com/photo-1497534446932-c925b458314e?w=300')">
+        <video muted loop playsinline preload="none" src="videos/mango-mojito.mp4"></video>
+      </div>
+      <h3>Berry Smoothie</h3>
+      <p>Smoothie</p>
+    
+    </div>
+
+    <div class="drink-card">
+      <div class="drink-image" style="background-image:url('https://images.unsplash.com/photo-1544145945-f90425340c7e?w=300')">
+        <video muted loop playsinline preload="none" src="videos/mango-mojito.mp4"></video>
+      </div>
+      <h3>Iced Latte</h3>
+      <p>Coffee</p>
+     
+    </div>
+  </div>
+
+  <button id="see-more-drinks">See More</button>
+</section>
+    
+    <section class="recipe-book" id="recipe-book">
+  <span class="eyebrow" id="bookie">ChefGPT's Menu</span>
+  <h2>Most Tried Recipes</h2>
+      <button class="suggest-btn" id="share-btn">Share your recipe</button>
+
+  <div class="book-wrapper">
+    <div class="book">
+      <div class="book-spine"></div>
+
+      <div class="page page-left">
+        <div class="recipe-entry">
+          <div class="recipe-thumb" style="background-image:url('https://images.unsplash.com/photo-1553621042-f6e147245754?w=200')"></div>
+          <div>
+            <h3>Sushi</h3>
+            <p>Japanese Food</p>
+          </div>
+        </div>
+        <div class="recipe-entry">
+          <div class="recipe-thumb" style="background-image:url('https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=200')"></div>
+          <div>
+            <h3>samosa</h3>
+            <p>Indian Fast Food</p>
+            
+          </div>
+        </div>
+      </div>
+
+      <div class="page page-right">
+        <div class="page page-right">
+        <button class="close-btn" id="closeBtn" aria-label="Close the recipe book">✕</button>
+
+        <div class="recipe-entry">
+          <div class="recipe-thumb" style="background-image:url('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200')"></div>
+          <div>
+            <h3>Vegetable Salad</h3>
+            <p>Diet Food</p>
+           
+          </div>
+        </div>
+        <div class="recipe-entry">
+          <div class="recipe-thumb" style="background-image:url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=200')"></div>
+          <div>
+            <h3>Choco Salad</h3>
+            <p>Desert</p>
+            
+          </div>
+        </div>
+      </div>
+
+      <div class="cover-page" id="coverPage">
+        <h3>Famous Recipes</h3>
+        <p>Our most tried and loved dishes by ChefGPT</p>
+        <button class="turn-btn" id="turnBtn" aria-label="Open the recipe book">➜</button>
+      </div>
+    </div>
+  </div>
+</section>
+    <section class="testimonials">
+  <span class="eyebrow" id="bookie">Testimonials</span>
+  <h2>What our customers say about us</h2>
+<button class="add-review-btn" id="addReviewBtn">+ Add Your Review</button>
+  <div class="testimonial-grid reveal">
+    <div class="testimonial-card">
+      <div class="testimonial-header">
+        <div class="avatar">NS</div>
+        <div>
+          <h3>Naura Silvana</h3>
+          <div class="stars">★★★★★</div>
+        </div>
+      </div>
+      <p>"I recently tried the signature dish and it exceeded all expectations. The flavors were perfectly balanced and the presentation was stunning. Definitely a must-try!"</p>
+    </div>
+
+    <div class="testimonial-card">
+      <div class="testimonial-header">
+        <div class="avatar">RK</div>
+        <div>
+          <h3>Rahul Kapoor</h3>
+          <div class="stars">★★★★★</div>
+        </div>
+      </div>
+      <p>"ChefGPT turned my random leftover ingredients into an actual restaurant-style meal. I didn't think an AI could suggest something this creative."</p>
+    </div>
+
+    <div class="testimonial-card">
+      <div class="testimonial-header">
+        <div class="avatar">JD</div>
+        <div>
+          <h3>Jenny Davis</h3>
+          <div class="stars">★★★★☆</div>
+        </div>
+      </div>
+      <p>"Super easy to use and the recipes actually taste good, not just 'AI generated' generic. Been using it every week to plan dinners."</p>
+    </div>
+  </div>
+</section>
+    <section class="newsletter">
+  <h2>Get new recipes in your inbox every week</h2>
+  <p>No spam, just fresh ideas for your next meal.</p>
+  <form class="newsletter-form" id="newsletterForm">
+    <input type="email" placeholder="Enter your email" required>
+    <button type="submit">Subscribe</button>
+  </form>
+</section>
+    <section class="faq">
+  <span class="eyebrow">Got Questions?</span>
+  <h2>Frequently Asked Questions</h2>
+
+  <div class="faq-list reveal">
+    <div class="faq-item">
+      <button class="faq-question">
+        Is ChefGPT free to use?
+        <span class="faq-icon">view answer</span>
+      </button>
+      <div class="faq-answer">
+        <p>Yes, ChefGPT is free to use for generating recipes. Some advanced features may require a premium plan in the future.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Do I need an account to save recipes?
+        <span class="faq-icon">view answer</span>
+      </button>
+      <div class="faq-answer">
+        <p>You can generate recipes without an account, but creating one lets you save favorites and access them later.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Can I filter recipes by dietary needs?
+        <span class="faq-icon">view answer</span>
+      </button>
+      <div class="faq-answer">
+        <p>Yes, you can filter by vegetarian, vegan, gluten-free, and other common dietary preferences.</p>
+      </div>
+    </div>
+  </div>
+      <div class="ask-question">
+    <button class="ask-toggle" id="askToggle">
+      + Ask a Question
+    </button>
+    <div class="ask-form" id="askForm">
+      <textarea id="askInput" rows="3" placeholder="Type your question here..."></textarea>
+      <button class="ask-submit" id="askSubmit">Submit Question</button>
+    </div>
+  </div>
+</section>
+        <footer class="site-footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="logo">🍕ChefGPT</div>
+      <p>Turning your fridge into inspiration, one recipe at a time.</p>
+    </div>
+
+    <div class="footer-links">
+      <a href="#hero">Home</a>
+      <a href="#recipe-book">Recipes</a>
+      <a href="#drinks">Drinks</a>
+      <a href="#" id="aboutDevLink">About the developer</a>
+    </div>
+  </div>
+    <div class="footer-bottom">
+    <p>© 2026 ChefGPT. All rights reserved.</p>
+  </div>
+</footer>
+    <div class="modal-overlay" id="recipeModal">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose">✕</button>
+    <h3>Share Your Recipe</h3>
+    <p class="modal-subtitle">Fill in the details below</p>
+
+    <form id="recipeForm">
+      <label>Recipe Name</label>
+      <input type="text" name="recipeName" placeholder="e.g. Spicy Garlic Noodles" required>
+
+      <label>Cuisine Type</label>
+      <input type="text" name="cuisine" placeholder="e.g. Thai, Italian" required>
+
+      <label>Ingredients</label>
+      <textarea name="ingredients" rows="4" placeholder="List each ingredient on a new line" required></textarea>
+
+      <label>Steps</label>
+      <textarea name="steps" rows="5" placeholder="Describe each step" required></textarea>
+
+      <label>Prep Time (minutes)</label>
+      <input type="number" name="prepTime" placeholder="e.g. 30" required>
+
+      <label>Image URL (optional)</label>
+      <input type="text" name="imageUrl" placeholder="Paste an image link">
+
+      <button type="submit" class="modal-submit">Submit Recipe</button>
+    </form>
+  </div>
+</div>
+    <div class="modal-overlay" id="reviewModal">
+  <div class="modal-box">
+    <button class="modal-close" id="reviewModalClose">✕</button>
+    <h3>Share Your Experience</h3>
+    <p class="modal-subtitle">Let others know what you think</p>
+
+    <form id="reviewForm">
+      <label>Your Name</label>
+      <input type="text" name="name" placeholder="e.g. Alex Johnson" required>
+
+      <label>Your Rating</label>
+      <div class="star-picker" id="starPicker">
+        <span class="star" data-value="1">★</span>
+        <span class="star" data-value="2">★</span>
+        <span class="star" data-value="3">★</span>
+        <span class="star" data-value="4">★</span>
+        <span class="star" data-value="5">★</span>
+      </div>
+      <input type="hidden" name="rating" id="ratingValue" required>
+
+      <label>Your Review</label>
+      <textarea name="comment" rows="4" placeholder="Tell us about your experience..." required></textarea>
+
+      <button type="submit" class="modal-submit">Submit Review</button>
+    </form>
+  </div>
+</div>
+
+    <div class="modal-overlay" id="devModal">
+  <div class="modal-box dev-card">
+    <button class="modal-close" id="devModalClose">✕</button>
+
+    <div class="dev-avatar">👩‍💻</div>
+    <h3>Peehu Maurya</h3>
+    <p class="dev-role">Full Stack Developer</p>
+
+    <p class="dev-bio">
+      Hello User!
+      <br>
+      I am Peehu Maurya.I'm from punjab,india and I'm currently a final year student persuing my B.Tech(CSE). I built ChefGPT as a project exploring how AI can turn everyday ingredients into creative recipe ideas. Passionate about clean UI, thoughtful UX, and solving real problems through code.
+      <br>
+      If you want me to hire for a project then contact me on linkedIn or insta 'DM'.
+      <br> 
+      Thanks for using my creation - ChefGPT ... also give me a review in the testimonial.
+    </p>
+
+    <div class="dev-links">
+      <button id="linkedin">LinkedIn</button>
+     <button id="insta">Instagram</button>
+  </div>
+</div>
+    </div>
+      <div class="modal-overlay" id="ingredientModal">
+      <div class="modal-box ingredient-box">
+        <button class="modal-close" id="ingredientModalClose">✕</button>
+        <h3>What's in your kitchen?</h3>
+        <p class="modal-subtitle">Pick your ingredients and we'll suggest a recipe</p>
+        <div class="ingredient-search">
+  <input type="text" id="ingredientSearch" placeholder="Search ingredients...">
+</div>
+       <div class="ingredient-tabs" id="ingredientTabs"></div>
+       <div class="ingredient-grid" id="ingredientGrid"></div>
+        <div class="selected-tray">
+  <div class="selected-tray-header">
+    <span id="selectedCount">0 ingredients selected</span>
+    <button id="clearSelected">Clear all</button>
+  </div>
+  <div class="selected-chips" id="selectedChips"></div>
+  <button class="generate-btn" id="generateBtn" disabled>Generate Recipe</button>
+</div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="quickRecipeModal">
+  <div class="modal-box">
+    <button class="modal-close" id="quickRecipeModalClose">✕</button>
+    <div class="quick-recipe-emoji" id="quickRecipeEmoji"></div>
+    <h3 id="quickRecipeTitle"></h3>
+    <p class="modal-subtitle" id="quickRecipeMeta"></p>
+
+    <h4>Ingredients</h4>
+    <ul class="quick-recipe-list" id="quickRecipeIngredients"></ul>
+
+    <h4>Steps</h4>
+    <ol class="quick-recipe-list" id="quickRecipeSteps"></ol>
+  </div>
+</div>
+    <script src="./script.js"></script>
+  </body>
+</html>
+        
