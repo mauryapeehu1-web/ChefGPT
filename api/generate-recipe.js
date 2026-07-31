@@ -9,7 +9,7 @@ if (!Array.isArray(ingredients) || ingredients.length === 0) {
   return res.status(400).json({ error: 'Please provide a non-empty "ingredients" array.' });
 }
 
-  const prompt = `Suggest one Indian recipe using these ingredients: ${ingredients.join(', ')}.
+const prompt = `Suggest one Indian recipe (this can be a savory dish, snack, dessert, drink, or shake — whichever best fits the ingredients) using these ingredients: ${ingredients.join(', ')}.
 Return ONLY valid JSON in this exact shape, no markdown, no extra text:
 {
   "title": "Recipe Name",
