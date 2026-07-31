@@ -552,6 +552,8 @@ function openRecipeDetail(recipe) {
 }
 
 function showRecipeOptions(recipes) {
+  recipeOptionsTitleEl.textContent = 'Choose a Recipe';
+  categorySearchInputEl.style.display = 'none';
   recipeOptionsListEl.innerHTML = recipes.map((r, i) => `
     <button class="recipe-option-card" data-index="${i}">
       <span class="recipe-option-emoji">${r.emoji}</span>
@@ -572,35 +574,92 @@ function showRecipeOptions(recipes) {
 
   recipeOptionsModal.classList.add('open');
 }
-document.querySelectorAll('.category-card').forEach(card => {
-  card.addEventListener('click', async () => {
-    const type = card.dataset.type;
+const recipeOptionsTitleEl = document.getElementById('recipeOptionsTitle');
+const categorySearchInputEl = document.getElementById('categorySearchInput');
+let currentCategoryDishes = [];
+let currentCategoryType = 'any';
 
-    recipeOptionsListEl.innerHTML = `<p class="loading-text">Cooking up some ${card.querySelector('h3').textContent.toLowerCase()} ideas...</p>`;
-    recipeOptionsModal.classList.add('open');
+function renderCategoryDishList(dishes) {
+  recipeOptionsListEl.innerHTML = dishes.map((d, i) => `
+    <button class="recipe-option-card" data-index="${i}">
+      <span class="recipe-option-emoji">${d.emoji}</span>
+      <span class="recipe-option-text">
+        <h4>${d.title}</h4>
+        <p>${d.meta || ''}</p>
+      </span>
+    </button>
+  `).join('');
 
-    try {
-      const response = await fetch(GENERATE_RECIPE_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ingredients: [], type })
-      });
+  recipeOptionsListEl.querySelectorAll('.recipe-option-card').forEach(card => {
+    card.addEventListener('click', () => {
+      loadDishDetail(dishes[Number(card.dataset.index)]);
+    });
+  });
+}
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || 'Failed to load recipes.');
-      }
+async function loadDishDetail(dish) {
+  recipeOptionsModal.classList.remove('open');
+  quickRecipeEmoji.textContent = dish.emoji;
+  quickRecipeTitle.textContent = dish.title;
+  quickRecipeMeta.textContent = 'Loading recipe...';
+  quickRecipeIngredients.innerHTML = '';
+  quickRecipeSteps.innerHTML = '';
+  quickRecipeModal.classList.add('open');
 
-      const result = await response.json();
-      if (!Array.isArray(result.recipes) || result.recipes.length === 0) {
-        throw new Error('No recipes returned.');
-      }
+  try {
+    const response = await fetch(GENERATE_RECIPE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'detail', dishName: dish.title, type: currentCategoryType })
+    });
+    if (!response.ok) throw new Error('Failed to load recipe.');
+    const recipe = await response.json();
+    openRecipeDetail(recipe);
+  } catch (err) {
+    console.error('Dish detail failed:', err);
+    quickRecipeMeta.textContent = 'Sorry, could not load this recipe. Please try again.';
+  }
+}
 
-      showRecipeOptions(result.recipes);
-    } catch (err) {
-      console.error('Category browse failed:', err);
-      recipeOptionsListEl.innerHTML = `<p class="loading-text">Something went wrong. Please try again.</p>`;
+async function openCategoryMenu(type, label) {
+  currentCategoryType = type;
+  recipeOptionsTitleEl.textContent = `${label} Menu`;
+  categorySearchInputEl.value = '';
+  categorySearchInputEl.style.display = 'block';
+  recipeOptionsListEl.innerHTML = `<p class="loading-text">Loading ${label.toLowerCase()} menu...</p>`;
+  recipeOptionsModal.classList.add('open');
+
+  try {
+    const response = await fetch(GENERATE_RECIPE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'list', type })
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || 'Failed to load menu.');
     }
+    const result = await response.json();
+    if (!Array.isArray(result.dishes) || result.dishes.length === 0) {
+      throw new Error('No dishes returned.');
+    }
+    currentCategoryDishes = result.dishes;
+    renderCategoryDishList(currentCategoryDishes);
+  } catch (err) {
+    console.error('Category menu failed:', err);
+    recipeOptionsListEl.innerHTML = `<p class="loading-text">Something went wrong loading the menu. Please try again.</p>`;
+  }
+}
+
+categorySearchInputEl.addEventListener('input', () => {
+  const q = categorySearchInputEl.value.trim().toLowerCase();
+  const filtered = currentCategoryDishes.filter(d => d.title.toLowerCase().includes(q));
+  renderCategoryDishList(filtered);
+});
+
+document.querySelectorAll('.category-card').forEach(card => {
+  card.addEventListener('click', () => {
+    openCategoryMenu(card.dataset.type, card.querySelector('h3').textContent);
   });
 });
 document.querySelectorAll('.suggestion-row').forEach(row => {

@@ -12,35 +12,55 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
-  const { ingredients, type } = req.body || {};
+const { ingredients, type, mode, dishName } = req.body || {};
 
-  if (!Array.isArray(ingredients)) {
-  return res.status(400).json({ error: '"ingredients" must be an array.' });
-}
-
-if (ingredients.length === 0 && (!type || type === 'any')) {
-  return res.status(400).json({ error: 'Please provide ingredients, or a specific category to browse.' });
-}
-
+if (mode !== 'list' && mode !== 'detail') {
+  if (!Array.isArray(ingredients) || ingredients.length === 0) {
+    return res.status(400).json({ error: 'Please provide a non-empty "ingredients" array.' });
+  }
   if (ingredients.length > 15) {
     return res.status(400).json({ error: 'Please select 15 ingredients or fewer.' });
   }
-
   if (ingredients.some(i => typeof i !== 'string' || i.length > 50)) {
     return res.status(400).json({ error: 'Invalid ingredient data.' });
   }
+}
 const typeInstruction = {
   savory: 'It must be a savory dish or snack (not sweet, not a drink).',
   sweet: 'It must be a sweet dish or dessert (not savory, not a drink).',
   drink: 'It must be a drink, shake, or smoothie (not a solid dish).',
+  salad: 'It must be a fresh salad or light chilled dish.',
   any: 'It can be a savory dish, sweet dish, or drink — whichever best fits the ingredients.'
 }[type] || 'It can be a savory dish, sweet dish, or drink — whichever best fits the ingredients.';
 
-const promptIntro = ingredients.length > 0
-  ? `Suggest 3 different Indian recipes using these ingredients: ${ingredients.join(', ')}.`
-  : `Suggest 3 popular, well-loved Indian recipes that fit this category, made from common home-kitchen ingredients.`;
+let prompt;
 
-const prompt = `${promptIntro} ${typeInstruction}
+if (mode === 'list') {
+  prompt = `List 12 different popular Indian dishes that fit this category: ${typeInstruction}
+Return ONLY valid JSON, no markdown, no extra text, in this exact shape:
+{
+  "dishes": [
+    { "title": "Dish Name", "emoji": "🍛", "meta": "Cuisine • Time" }
+  ]
+}
+All 12 dishes must be meaningfully different from each other.`;
+
+} else if (mode === 'detail') {
+  if (!dishName || typeof dishName !== 'string') {
+    return res.status(400).json({ error: 'Missing "dishName" for detail mode.' });
+  }
+  prompt = `Give a full authentic Indian recipe for "${dishName}".
+Return ONLY valid JSON, no markdown, no extra text, in this exact shape:
+{
+  "title": "${dishName}",
+  "emoji": "🍛",
+  "meta": "Cuisine • Time • Serves",
+  "ingredients": ["ingredient 1", "ingredient 2"],
+  "steps": ["step 1", "step 2"]
+}`;
+
+} else {
+  prompt = `Suggest 3 different Indian recipes using these ingredients: ${ingredients.join(', ')}. ${typeInstruction}
 Return ONLY valid JSON in this exact shape, no markdown, no extra text:
 {
   "recipes": [
@@ -54,7 +74,7 @@ Return ONLY valid JSON in this exact shape, no markdown, no extra text:
   ]
 }
 Include exactly 3 recipe objects inside the "recipes" array, each meaningfully different from the others (different dishes, not just minor variations).`;
-
+}
  try {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
@@ -64,8 +84,9 @@ Include exactly 3 recipe objects inside the "recipes" array, each meaningfully d
         'Content-Type': 'application/json',
         'x-goog-api-key': process.env.GEMINI_API_KEY
       },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
+    body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.95 }
       })
     }
   );

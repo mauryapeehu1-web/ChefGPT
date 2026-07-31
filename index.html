@@ -192,7 +192,6 @@
   <div class="drinks-grid reveal">
     <div class="drink-card">
       <div class="drink-image" style="background-image:url('https://images.unsplash.com/photo-1579630942078-100a2f8e9052?crop=entropy&cs=srgb&fm=jpg&ixid=M3wzMjM4NDZ8MHwxfHJhbmRvbXx8fHx8fHx8fDE3ODQ5MTMxMzB8&ixlib=rb-4.1.0&q=85')">
-        <video muted loop playsinline preload="none" src="https://www.youtube.com/shorts/r9xkpEIJ--g?feature=share"></video>
       </div>
       <h3>Mango Mojito</h3>
       <p>Mocktail</p>
@@ -498,7 +497,8 @@
 <div class="modal-overlay" id="recipeOptionsModal">
       <div class="modal-box">
         <button class="modal-close" id="recipeOptionsModalClose">✕</button>
-        <h3>Choose a Recipe</h3>
+        <h3 id="recipeOptionsTitle">Choose a Recipe</h3>
+        <input type="text" id="categorySearchInput" class="category-search-input" placeholder="Search dishes..." style="display:none;">
         <div class="recipe-options-list" id="recipeOptionsList"></div>
       </div>
     </div>

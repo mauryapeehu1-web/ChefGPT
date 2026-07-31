@@ -1743,3 +1743,18 @@ body {
     flex-wrap: wrap;
   cursor: pointer;
   }
+.category-search-input {
+  width: 100%;
+  padding: 10px 14px;
+  margin: 10px 0 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.loading-text {
+  text-align: center;
+  padding: 30px 10px;
+  color: #666;
+  font-style: italic;
+}
