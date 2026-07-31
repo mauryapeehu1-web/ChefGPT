@@ -1,13 +1,30 @@
 export default async function handler(req, res) {
- if (req.method !== 'POST') {
-  return res.status(405).json({ error: 'Method not allowed. Use POST.' });
-}
+  const allowedOrigin = 'https://chef-gpt-tan.vercel.app';
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  res.setHeader('Access-Control-Allow-Methods', 'POST');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-const { ingredients, type } = req.body || {};
-if (!Array.isArray(ingredients) || ingredients.length === 0) {
-  return res.status(400).json({ error: 'Please provide a non-empty "ingredients" array.' });
-}
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+  }
+
+  const { ingredients, type } = req.body || {};
+
+  if (!Array.isArray(ingredients) || ingredients.length === 0) {
+    return res.status(400).json({ error: 'Please provide a non-empty "ingredients" array.' });
+  }
+
+  if (ingredients.length > 15) {
+    return res.status(400).json({ error: 'Please select 15 ingredients or fewer.' });
+  }
+
+  if (ingredients.some(i => typeof i !== 'string' || i.length > 50)) {
+    return res.status(400).json({ error: 'Invalid ingredient data.' });
+  }
 const typeInstruction = {
   savory: 'It must be a savory dish or snack (not sweet, not a drink).',
   sweet: 'It must be a sweet dish or dessert (not savory, not a drink).',
