@@ -1628,6 +1628,25 @@ body {
   background-color: #d1d1d1;
   cursor: not-allowed;
 }
+.recipe-type-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.type-option {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #d1d1d1;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+.type-option.active {
+  background-color: #FF6B4A;
+  color: white;
+  border-color: #FF6B4A;
+}
 .quick-suggestions {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;

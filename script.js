@@ -334,6 +334,16 @@ const ingredientGridEl = document.getElementById('ingredientGrid');
 const selectedCountEl = document.getElementById('selectedCount');
 const selectedChipsEl = document.getElementById('selectedChips');
 const generateBtnEl = document.getElementById('generateBtn');
+const recipeTypeSelectorEl = document.getElementById('recipeTypeSelector');
+let selectedRecipeType = 'any';
+
+recipeTypeSelectorEl.querySelectorAll('.type-option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    recipeTypeSelectorEl.querySelectorAll('.type-option').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedRecipeType = btn.dataset.type;
+  });
+});
 const clearSelectedEl = document.getElementById('clearSelected');
 let selectedIngredients = [];
 
@@ -404,7 +414,7 @@ generateBtnEl.addEventListener('click', async () => {
     const response = await fetch(GENERATE_RECIPE_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ingredients: selectedIngredients })
+body: JSON.stringify({ ingredients: selectedIngredients, type: selectedRecipeType })
     });
 
     if (!response.ok) {

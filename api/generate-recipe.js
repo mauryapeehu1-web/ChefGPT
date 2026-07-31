@@ -3,13 +3,19 @@ export default async function handler(req, res) {
   return res.status(405).json({ error: 'Method not allowed. Use POST.' });
 }
 
-const { ingredients } = req.body || {};
-
+const { ingredients, type } = req.body || {};
 if (!Array.isArray(ingredients) || ingredients.length === 0) {
   return res.status(400).json({ error: 'Please provide a non-empty "ingredients" array.' });
 }
 
-const prompt = `Suggest one Indian recipe (this can be a savory dish, snack, dessert, drink, or shake — whichever best fits the ingredients) using these ingredients: ${ingredients.join(', ')}.
+const typeInstruction = {
+  savory: 'It must be a savory dish or snack (not sweet, not a drink).',
+  sweet: 'It must be a sweet dish or dessert (not savory, not a drink).',
+  drink: 'It must be a drink, shake, or smoothie (not a solid dish).',
+  any: 'It can be a savory dish, sweet dish, or drink — whichever best fits the ingredients.'
+}[type] || 'It can be a savory dish, sweet dish, or drink — whichever best fits the ingredients.';
+
+const prompt = `Suggest one Indian recipe using these ingredients: ${ingredients.join(', ')}. ${typeInstruction}
 Return ONLY valid JSON in this exact shape, no markdown, no extra text:
 {
   "title": "Recipe Name",
