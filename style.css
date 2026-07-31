@@ -1647,6 +1647,12 @@ body {
   color: white;
   border-color: #FF6B4A;
 }
+.recipe-type-warning {
+  color: #d9534f;
+  font-size: 12px;
+  margin-bottom: 10px;
+  min-height: 16px;
+}
 .quick-suggestions {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;

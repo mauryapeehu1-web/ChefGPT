@@ -336,14 +336,48 @@ const selectedChipsEl = document.getElementById('selectedChips');
 const generateBtnEl = document.getElementById('generateBtn');
 const recipeTypeSelectorEl = document.getElementById('recipeTypeSelector');
 let selectedRecipeType = 'any';
-
 recipeTypeSelectorEl.querySelectorAll('.type-option').forEach(btn => {
   btn.addEventListener('click', () => {
     recipeTypeSelectorEl.querySelectorAll('.type-option').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     selectedRecipeType = btn.dataset.type;
+    checkTypeCompatibility();
   });
 });
+
+const TYPE_COMPATIBLE_CATEGORIES = {
+  drink: ['Fruits', 'Dairy'],
+  sweet: ['Fruits', 'Dairy', 'Grains'],
+  savory: ['Vegetables', 'Protein', 'Grains', 'Spices'],
+  any: null // no restriction
+};
+
+const recipeTypeWarningEl = document.createElement('div');
+recipeTypeWarningEl.className = 'recipe-type-warning';
+recipeTypeSelectorEl.insertAdjacentElement('afterend', recipeTypeWarningEl);
+
+function checkTypeCompatibility() {
+  const allowedCategories = TYPE_COMPATIBLE_CATEGORIES[selectedRecipeType];
+
+  if (!allowedCategories || selectedIngredients.length === 0) {
+    recipeTypeWarningEl.textContent = '';
+    generateBtnEl.disabled = selectedIngredients.length === 0;
+    return;
+  }
+
+  const hasCompatible = selectedIngredients.some(name => {
+    const ing = INGREDIENTS.find(i => i.name === name);
+    return ing && allowedCategories.includes(ing.category);
+  });
+
+  if (!hasCompatible) {
+    recipeTypeWarningEl.textContent = `Your selected ingredients don't really suit a ${selectedRecipeType} recipe. Try adding something like ${allowedCategories.join(' or ')}, or switch to "Any".`;
+    generateBtnEl.disabled = true;
+  } else {
+    recipeTypeWarningEl.textContent = '';
+    generateBtnEl.disabled = false;
+  }
+}
 const clearSelectedEl = document.getElementById('clearSelected');
 let selectedIngredients = [];
 
@@ -392,7 +426,7 @@ function renderSelectedTray() {
     btn.addEventListener('click', () => toggleIngredient(btn.dataset.name));
     
   });
-  generateBtnEl.disabled = selectedIngredients.length === 0;
+  checkTypeCompatibility();
 }
 clearSelectedEl.addEventListener('click', () => {
   selectedIngredients = [];
