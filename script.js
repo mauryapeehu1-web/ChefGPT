@@ -391,11 +391,45 @@ clearSelectedEl.addEventListener('click', () => {
   renderGrid();
   renderSelectedTray();
 });
+const GENERATE_RECIPE_ENDPOINT = 'https://chef-gpt-tan.vercel.app/api/generate-recipe';
+generateBtnEl.addEventListener('click', async () => {
+  if (selectedIngredients.length === 0) return;
 
-generateBtnEl.addEventListener('click', () => {
-  alert(`Ready to generate a recipe with: ${selectedIngredients.map(n => n).join(', ')}`);
+  const originalLabel = generateBtnEl.textContent;
+  generateBtnEl.disabled = true;
+  generateBtnEl.classList.add('loading');
+  generateBtnEl.innerHTML = '<span class="btn-spinner"></span> Generating...';
+
+  try {
+    const response = await fetch(GENERATE_RECIPE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ingredients: selectedIngredients })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || 'Failed to generate recipe.');
+    }
+
+    const recipe = await response.json();
+
+    quickRecipeEmoji.textContent = recipe.emoji;
+    quickRecipeTitle.textContent = recipe.title;
+    quickRecipeMeta.textContent = recipe.meta;
+    quickRecipeIngredients.innerHTML = recipe.ingredients.map(i => `<li>${i}</li>`).join('');
+    quickRecipeSteps.innerHTML = recipe.steps.map(s => `<li>${s}</li>`).join('');
+
+    quickRecipeModal.classList.add('open');
+  } catch (err) {
+    console.error('Recipe generation failed:', err);
+    alert('Sorry, something went wrong generating your recipe. Please try again.');
+  } finally {
+    generateBtnEl.disabled = selectedIngredients.length === 0;
+    generateBtnEl.classList.remove('loading');
+    generateBtnEl.textContent = originalLabel;
+  }
 });
-
 renderTabs();
 renderGrid();
 renderSelectedTray();
