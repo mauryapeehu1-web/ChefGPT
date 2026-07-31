@@ -57,3 +57,4 @@ Return ONLY valid JSON in this exact shape, no markdown, no extra text:
   console.error('generate-recipe handler error:', err);
   res.status(500).json({ error: 'Something went wrong generating the recipe.' });
 }
+}
