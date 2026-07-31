@@ -345,6 +345,10 @@ const selectedChipsEl = document.getElementById('selectedChips');
 const generateBtnEl = document.getElementById('generateBtn');
 const recipeTypeSelectorEl = document.getElementById('recipeTypeSelector');
 let selectedRecipeType = 'any';
+const recipeTypeWarningEl = document.createElement('div');
+recipeTypeWarningEl.className = 'recipe-type-warning';
+recipeTypeSelectorEl.insertAdjacentElement('afterend', recipeTypeWarningEl);
+
 recipeTypeSelectorEl.querySelectorAll('.type-option').forEach(btn => {
   btn.addEventListener('click', () => {
     recipeTypeSelectorEl.querySelectorAll('.type-option').forEach(b => b.classList.remove('active'));
