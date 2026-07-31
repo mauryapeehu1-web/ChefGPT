@@ -572,6 +572,37 @@ function showRecipeOptions(recipes) {
 
   recipeOptionsModal.classList.add('open');
 }
+document.querySelectorAll('.category-card').forEach(card => {
+  card.addEventListener('click', async () => {
+    const type = card.dataset.type;
+
+    recipeOptionsListEl.innerHTML = `<p class="loading-text">Cooking up some ${card.querySelector('h3').textContent.toLowerCase()} ideas...</p>`;
+    recipeOptionsModal.classList.add('open');
+
+    try {
+      const response = await fetch(GENERATE_RECIPE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients: [], type })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to load recipes.');
+      }
+
+      const result = await response.json();
+      if (!Array.isArray(result.recipes) || result.recipes.length === 0) {
+        throw new Error('No recipes returned.');
+      }
+
+      showRecipeOptions(result.recipes);
+    } catch (err) {
+      console.error('Category browse failed:', err);
+      recipeOptionsListEl.innerHTML = `<p class="loading-text">Something went wrong. Please try again.</p>`;
+    }
+  });
+});
 document.querySelectorAll('.suggestion-row').forEach(row => {
   row.addEventListener('click', () => {
     const dishName = row.querySelector('.suggestion-dish').textContent.trim().replace(/^\S+\s/, '');

@@ -14,9 +14,13 @@ export default async function handler(req, res) {
 
   const { ingredients, type } = req.body || {};
 
-  if (!Array.isArray(ingredients) || ingredients.length === 0) {
-    return res.status(400).json({ error: 'Please provide a non-empty "ingredients" array.' });
-  }
+  if (!Array.isArray(ingredients)) {
+  return res.status(400).json({ error: '"ingredients" must be an array.' });
+}
+
+if (ingredients.length === 0 && (!type || type === 'any')) {
+  return res.status(400).json({ error: 'Please provide ingredients, or a specific category to browse.' });
+}
 
   if (ingredients.length > 15) {
     return res.status(400).json({ error: 'Please select 15 ingredients or fewer.' });
@@ -32,7 +36,11 @@ const typeInstruction = {
   any: 'It can be a savory dish, sweet dish, or drink — whichever best fits the ingredients.'
 }[type] || 'It can be a savory dish, sweet dish, or drink — whichever best fits the ingredients.';
 
-const prompt = `Suggest 3 different Indian recipes using these ingredients: ${ingredients.join(', ')}. ${typeInstruction}
+const promptIntro = ingredients.length > 0
+  ? `Suggest 3 different Indian recipes using these ingredients: ${ingredients.join(', ')}.`
+  : `Suggest 3 popular, well-loved Indian recipes that fit this category, made from common home-kitchen ingredients.`;
+
+const prompt = `${promptIntro} ${typeInstruction}
 Return ONLY valid JSON in this exact shape, no markdown, no extra text:
 {
   "recipes": [
