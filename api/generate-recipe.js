@@ -53,8 +53,11 @@ Return ONLY valid JSON, no markdown, no extra text, in this exact shape:
 }
 All 12 dishes must be meaningfully different from each other, spanning different subtypes and cuisines — not just one style repeated.`;
 
-}
-prompt = `Give a full authentic recipe for "${dishName}", true to its original cuisine of origin.
+} else if (mode === 'detail') {
+  if (!dishName || typeof dishName !== 'string') {
+    return res.status(400).json({ error: 'Missing "dishName" for detail mode.' });
+  }
+  prompt = `Give a full authentic recipe for "${dishName}", true to its original cuisine of origin.
 Return ONLY valid JSON, no markdown, no extra text, in this exact shape:
 {
   "title": "${dishName}",
