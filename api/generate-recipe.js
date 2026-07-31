@@ -36,20 +36,25 @@ const typeInstruction = {
 let prompt;
 
 if (mode === 'list') {
-  prompt = `List 12 different popular Indian dishes that fit this category: ${typeInstruction}
+  const varietyInstruction = {
+    sweet: 'Include a wide mix of dessert styles — traditional Indian sweets (mithai), cakes, pastries, brownies, puddings, ice creams, cookies, and other sweet treats from different cuisines. Do not make them all the same style.',
+    savory: 'Include a wide mix of savory styles — curries, snacks, breads, rice dishes, and street food from different cuisines.',
+    drink: 'Include a wide mix — mocktails, smoothies, lassis, iced teas, coffees, and fresh juices from different cuisines.',
+    salad: 'Include a wide mix of fresh salads and light chilled dishes from different cuisines.',
+    any: 'Include a wide mix of dish styles and cuisines.'
+  }[type] || 'Include a wide mix of dish styles and cuisines.';
+
+  prompt = `List 12 different popular dishes that fit this category: ${typeInstruction} ${varietyInstruction}
 Return ONLY valid JSON, no markdown, no extra text, in this exact shape:
 {
   "dishes": [
-    { "title": "Dish Name", "emoji": "🍛", "meta": "Cuisine • Time" }
+    { "title": "Dish Name", "emoji": "🍰", "meta": "Cuisine • Time" }
   ]
 }
-All 12 dishes must be meaningfully different from each other.`;
+All 12 dishes must be meaningfully different from each other, spanning different subtypes and cuisines — not just one style repeated.`;
 
-} else if (mode === 'detail') {
-  if (!dishName || typeof dishName !== 'string') {
-    return res.status(400).json({ error: 'Missing "dishName" for detail mode.' });
-  }
-  prompt = `Give a full authentic Indian recipe for "${dishName}".
+}
+prompt = `Give a full authentic recipe for "${dishName}", true to its original cuisine of origin.
 Return ONLY valid JSON, no markdown, no extra text, in this exact shape:
 {
   "title": "${dishName}",
