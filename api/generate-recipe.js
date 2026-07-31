@@ -15,15 +15,20 @@ const typeInstruction = {
   any: 'It can be a savory dish, sweet dish, or drink — whichever best fits the ingredients.'
 }[type] || 'It can be a savory dish, sweet dish, or drink — whichever best fits the ingredients.';
 
-const prompt = `Suggest one Indian recipe using these ingredients: ${ingredients.join(', ')}. ${typeInstruction}
+const prompt = `Suggest 3 different Indian recipes using these ingredients: ${ingredients.join(', ')}. ${typeInstruction}
 Return ONLY valid JSON in this exact shape, no markdown, no extra text:
 {
-  "title": "Recipe Name",
-  "emoji": "🍛",
-  "meta": "Cuisine • Time • Serves",
-  "ingredients": ["ingredient 1", "ingredient 2"],
-  "steps": ["step 1", "step 2"]
-}`;
+  "recipes": [
+    {
+      "title": "Recipe Name",
+      "emoji": "🍛",
+      "meta": "Cuisine • Time • Serves",
+      "ingredients": ["ingredient 1", "ingredient 2"],
+      "steps": ["step 1", "step 2"]
+    }
+  ]
+}
+Include exactly 3 recipe objects inside the "recipes" array, each meaningfully different from the others (different dishes, not just minor variations).`;
 
  try {
   const response = await fetch(

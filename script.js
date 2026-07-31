@@ -301,7 +301,7 @@ const INGREDIENTS = [
   { name: 'Tamarind', emoji: '🌰', category: 'Spices' },
   { name: 'Coriander Leaves', emoji: '🌿', category: 'Spices' },
   { name: 'Mint Leaves', emoji: '🌿', category: 'Spices' },
-  { name: 'Lemon', emoji: '🍋', category: 'Fruits' },
+{ name: 'Lemon', emoji: '🍋', category: 'Fruits' },
   { name: 'Mango', emoji: '🥭', category: 'Fruits' },
   { name: 'Banana', emoji: '🍌', category: 'Fruits' },
   { name: 'Apple', emoji: '🍎', category: 'Fruits' },
@@ -309,6 +309,15 @@ const INGREDIENTS = [
   { name: 'Guava', emoji: '🍈', category: 'Fruits' },
   { name: 'Pomegranate', emoji: '🔴', category: 'Fruits' },
   { name: 'Coconut', emoji: '🥥', category: 'Fruits' },
+  { name: 'Watermelon', emoji: '🍉', category: 'Fruits' },
+  { name: 'Grapes', emoji: '🍇', category: 'Fruits' },
+  { name: 'Pineapple', emoji: '🍍', category: 'Fruits' },
+  { name: 'Orange', emoji: '🍊', category: 'Fruits' },
+  { name: 'Strawberry', emoji: '🍓', category: 'Fruits' },
+  { name: 'Kiwi', emoji: '🥝', category: 'Fruits' },
+  { name: 'Chikoo (Sapota)', emoji: '🟤', category: 'Fruits' },
+  { name: 'Muskmelon (Kharbuja)', emoji: '🍈', category: 'Fruits' },
+  { name: 'Dates', emoji: '🌰', category: 'Fruits' },
 ];
 
 const ingredientTabsEl = document.getElementById('ingredientTabs');
@@ -345,38 +354,30 @@ recipeTypeSelectorEl.querySelectorAll('.type-option').forEach(btn => {
   });
 });
 
-const TYPE_COMPATIBLE_CATEGORIES = {
+const TYPE_HINT_CATEGORIES = {
   drink: ['Fruits', 'Dairy'],
-  sweet: ['Fruits', 'Dairy', 'Grains'],
+  sweet: ['Fruits', 'Dairy', 'Grains', 'Vegetables'],
   savory: ['Vegetables', 'Protein', 'Grains', 'Spices'],
-  any: null // no restriction
+  any: null
 };
 
-const recipeTypeWarningEl = document.createElement('div');
-recipeTypeWarningEl.className = 'recipe-type-warning';
-recipeTypeSelectorEl.insertAdjacentElement('afterend', recipeTypeWarningEl);
-
 function checkTypeCompatibility() {
-  const allowedCategories = TYPE_COMPATIBLE_CATEGORIES[selectedRecipeType];
+  const hintCategories = TYPE_HINT_CATEGORIES[selectedRecipeType];
+  generateBtnEl.disabled = selectedIngredients.length === 0;
 
-  if (!allowedCategories || selectedIngredients.length === 0) {
+  if (!hintCategories || selectedIngredients.length === 0) {
     recipeTypeWarningEl.textContent = '';
-    generateBtnEl.disabled = selectedIngredients.length === 0;
     return;
   }
 
-  const hasCompatible = selectedIngredients.some(name => {
+  const hasHintMatch = selectedIngredients.some(name => {
     const ing = INGREDIENTS.find(i => i.name === name);
-    return ing && allowedCategories.includes(ing.category);
+    return ing && hintCategories.includes(ing.category);
   });
 
-  if (!hasCompatible) {
-    recipeTypeWarningEl.textContent = `Your selected ingredients don't really suit a ${selectedRecipeType} recipe. Try adding something like ${allowedCategories.join(' or ')}, or switch to "Any".`;
-    generateBtnEl.disabled = true;
-  } else {
-    recipeTypeWarningEl.textContent = '';
-    generateBtnEl.disabled = false;
-  }
+  recipeTypeWarningEl.textContent = hasHintMatch
+    ? ''
+    : `Just a heads up — this combo isn't the most typical for a ${selectedRecipeType} recipe, but Gemini will still do its best.`;
 }
 const clearSelectedEl = document.getElementById('clearSelected');
 let selectedIngredients = [];
@@ -455,16 +456,13 @@ body: JSON.stringify({ ingredients: selectedIngredients, type: selectedRecipeTyp
       const errData = await response.json().catch(() => ({}));
       throw new Error(errData.error || 'Failed to generate recipe.');
     }
+const result = await response.json();
 
-    const recipe = await response.json();
+if (!Array.isArray(result.recipes) || result.recipes.length === 0) {
+  throw new Error('No recipes returned.');
+}
 
-    quickRecipeEmoji.textContent = recipe.emoji;
-    quickRecipeTitle.textContent = recipe.title;
-    quickRecipeMeta.textContent = recipe.meta;
-    quickRecipeIngredients.innerHTML = recipe.ingredients.map(i => `<li>${i}</li>`).join('');
-    quickRecipeSteps.innerHTML = recipe.steps.map(s => `<li>${s}</li>`).join('');
-
-    quickRecipeModal.classList.add('open');
+showRecipeOptions(result.recipes);
   } catch (err) {
     console.error('Recipe generation failed:', err);
     alert('Sorry, something went wrong generating your recipe. Please try again.');
@@ -527,7 +525,49 @@ const quickRecipeTitle = document.getElementById('quickRecipeTitle');
 const quickRecipeMeta = document.getElementById('quickRecipeMeta');
 const quickRecipeIngredients = document.getElementById('quickRecipeIngredients');
 const quickRecipeSteps = document.getElementById('quickRecipeSteps');
+const recipeOptionsModal = document.getElementById('recipeOptionsModal');
+const recipeOptionsModalClose = document.getElementById('recipeOptionsModalClose');
+const recipeOptionsListEl = document.getElementById('recipeOptionsList');
 
+recipeOptionsModalClose.addEventListener('click', () => {
+  recipeOptionsModal.classList.remove('open');
+});
+recipeOptionsModal.addEventListener('click', (e) => {
+  if (e.target === recipeOptionsModal) {
+    recipeOptionsModal.classList.remove('open');
+  }
+});
+
+function openRecipeDetail(recipe) {
+  quickRecipeEmoji.textContent = recipe.emoji;
+  quickRecipeTitle.textContent = recipe.title;
+  quickRecipeMeta.textContent = recipe.meta;
+  quickRecipeIngredients.innerHTML = recipe.ingredients.map(i => `<li>${i}</li>`).join('');
+  quickRecipeSteps.innerHTML = recipe.steps.map(s => `<li>${s}</li>`).join('');
+  quickRecipeModal.classList.add('open');
+}
+
+function showRecipeOptions(recipes) {
+  recipeOptionsListEl.innerHTML = recipes.map((r, i) => `
+    <button class="recipe-option-card" data-index="${i}">
+      <span class="recipe-option-emoji">${r.emoji}</span>
+      <span class="recipe-option-text">
+        <h4>${r.title}</h4>
+        <p>${r.meta}</p>
+      </span>
+    </button>
+  `).join('');
+
+  recipeOptionsListEl.querySelectorAll('.recipe-option-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const recipe = recipes[Number(card.dataset.index)];
+      recipeOptionsModal.classList.remove('open');
+      openRecipeDetail(recipe);
+    });
+  });
+
+  recipeOptionsModal.classList.add('open');
+}
 document.querySelectorAll('.suggestion-row').forEach(row => {
   row.addEventListener('click', () => {
     const dishName = row.querySelector('.suggestion-dish').textContent.trim().replace(/^\S+\s/, '');

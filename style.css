@@ -1027,6 +1027,39 @@ body {
   color: #6b7280;
   margin: 0 0 20px;
 }
+.recipe-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+.recipe-option-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  background: white;
+  transition: background 0.15s;
+}
+.recipe-option-card:hover {
+  background: #F1FAEE;
+  border-color: #FF6B4A;
+}
+.recipe-option-emoji {
+  font-size: 28px;
+}
+.recipe-option-text h4 {
+  margin: 0 0 4px 0;
+}
+.recipe-option-text p {
+  margin: 0;
+  font-size: 12px;
+  color: #777;
+}
 #recipeForm label,
 #reviewForm label {
   display: block;
