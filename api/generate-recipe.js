@@ -44,15 +44,15 @@ if (mode === 'list') {
     any: 'Include a wide mix of dish styles and cuisines.'
   }[type] || 'Include a wide mix of dish styles and cuisines.';
 
-  prompt = `List 12 different popular dishes that fit this category: ${typeInstruction} ${varietyInstruction}
+prompt = `List 12 different popular dishes that fit this category: ${typeInstruction} ${varietyInstruction}
+Make sure at least 4 of the 12 are specifically Indian dishes.
 Return ONLY valid JSON, no markdown, no extra text, in this exact shape:
 {
   "dishes": [
-    { "title": "Dish Name", "emoji": "🍰", "meta": "Cuisine • Time" }
+    { "title": "Dish Name", "emoji": "🍰", "meta": "Cuisine • Time", "cuisine": "Indian" }
   ]
 }
-All 12 dishes must be meaningfully different from each other, spanning different subtypes and cuisines — not just one style repeated.`;
-
+The "cuisine" field must be a single word or short label (e.g. "Indian", "Italian", "American", "Thai"). All 12 dishes must be meaningfully different from each other, spanning different subtypes and cuisines — not just one style repeated.`;
 } else if (mode === 'detail') {
   if (!dishName || typeof dishName !== 'string') {
     return res.status(400).json({ error: 'Missing "dishName" for detail mode.' });

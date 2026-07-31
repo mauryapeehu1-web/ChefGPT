@@ -579,16 +579,48 @@ const categorySearchInputEl = document.getElementById('categorySearchInput');
 let currentCategoryDishes = [];
 let currentCategoryType = 'any';
 
-function renderCategoryDishList(dishes) {
-  recipeOptionsListEl.innerHTML = dishes.map((d, i) => `
-    <button class="recipe-option-card" data-index="${i}">
-      <span class="recipe-option-emoji">${d.emoji}</span>
+function buildDishCard(dish, index) {
+  return `
+    <button class="recipe-option-card" data-index="${index}">
+      <span class="recipe-option-emoji">${dish.emoji}</span>
       <span class="recipe-option-text">
-        <h4>${d.title}</h4>
-        <p>${d.meta || ''}</p>
+        <h4>${dish.title}</h4>
+        <p>${dish.meta || ''}</p>
       </span>
     </button>
-  `).join('');
+  `;
+}
+
+function renderCategoryDishList(dishes) {
+  const isIndian = (d) => (d.cuisine || '').toLowerCase().includes('indian');
+  const indianDishes = dishes.filter(isIndian);
+  const otherDishes = dishes.filter(d => !isIndian(d));
+
+  // Fallback: if Gemini didn't tag cuisine at all, just show one flat list
+  if (indianDishes.length === 0 && otherDishes.length === dishes.length && !dishes[0]?.cuisine) {
+    recipeOptionsListEl.innerHTML = `<div class="column-list">${dishes.map((d, i) => buildDishCard(d, i)).join('')}</div>`;
+  } else {
+    recipeOptionsListEl.innerHTML = `
+      <div class="recipe-columns">
+        <div class="recipe-column">
+          <h4 class="column-heading">🇮🇳 Indian</h4>
+          <div class="column-list">
+            ${indianDishes.length > 0
+              ? indianDishes.map((d) => buildDishCard(d, dishes.indexOf(d))).join('')
+              : '<p class="loading-text">No Indian dishes matched.</p>'}
+          </div>
+        </div>
+        <div class="recipe-column">
+          <h4 class="column-heading">🌍 Other Cuisines</h4>
+          <div class="column-list">
+            ${otherDishes.length > 0
+              ? otherDishes.map((d) => buildDishCard(d, dishes.indexOf(d))).join('')
+              : '<p class="loading-text">No other cuisines matched.</p>'}
+          </div>
+        </div>
+      </div>
+    `;
+  }
 
   recipeOptionsListEl.querySelectorAll('.recipe-option-card').forEach(card => {
     card.addEventListener('click', () => {

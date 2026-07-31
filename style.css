@@ -1758,3 +1758,35 @@ body {
   color: #666;
   font-style: italic;
 }
+.recipe-columns {
+  display: flex;
+  gap: 20px;
+}
+
+.recipe-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.column-heading {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  color: #444;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 6px;
+}
+
+.column-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+/* Stack columns on narrow screens */
+@media (max-width: 600px) {
+  .recipe-columns {
+    flex-direction: column;
+  }
+}
