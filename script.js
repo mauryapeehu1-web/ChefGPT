@@ -658,6 +658,7 @@ async function openCategoryMenu(type, label) {
   recipeOptionsTitleEl.textContent = `${label} Menu`;
   categorySearchInputEl.value = '';
   categorySearchInputEl.style.display = 'block';
+  categorySearchInputEl.placeholder = `Search ${label.toLowerCase()}...`;
   recipeOptionsListEl.innerHTML = `<p class="loading-text">Loading ${label.toLowerCase()} menu...</p>`;
   recipeOptionsModal.classList.add('open');
 
@@ -781,8 +782,12 @@ async function searchAnyDishInCategory(query) {
       body: JSON.stringify({ mode: 'detail', dishName: query, type: currentCategoryType })
     });
     if (!response.ok) throw new Error('Failed to load recipe.');
-    const recipe = await response.json();
-    openRecipeDetail(recipe);
+  const recipe = await response.json();
+if (recipe.error === 'not_in_category') {
+  quickRecipeMeta.textContent = `"${query}" doesn't look like a ${currentCategoryType} recipe. Try a different name.`;
+  return;
+}
+openRecipeDetail(recipe);
   } catch (err) {
     console.error('Category search failed:', err);
     quickRecipeMeta.textContent = 'Sorry, could not find that recipe. Try a different name.';

@@ -57,7 +57,12 @@ The "cuisine" field must be a single word or short label (e.g. "Indian", "Italia
   if (!dishName || typeof dishName !== 'string') {
     return res.status(400).json({ error: 'Missing "dishName" for detail mode.' });
   }
-  prompt = `Give a full authentic recipe for "${dishName}", true to its original cuisine of origin.
+
+  const categoryConstraint = (type && type !== 'any')
+    ? ` This recipe MUST fit this category: ${typeInstruction} If "${dishName}" cannot reasonably fit that category (for example, someone asking for a savory main dish while browsing a drinks section), do NOT invent a recipe — instead respond with ONLY this exact JSON and nothing else: {"error": "not_in_category"}`
+    : '';
+
+  prompt = `Give a full authentic recipe for "${dishName}", true to its original cuisine of origin.${categoryConstraint}
 Return ONLY valid JSON, no markdown, no extra text, in this exact shape:
 {
   "title": "${dishName}",
@@ -66,7 +71,6 @@ Return ONLY valid JSON, no markdown, no extra text, in this exact shape:
   "ingredients": ["ingredient 1", "ingredient 2"],
   "steps": ["step 1", "step 2"]
 }`;
-
 } else {
   prompt = `Suggest 3 different Indian recipes using these ingredients: ${ingredients.join(', ')}. ${typeInstruction}
 Return ONLY valid JSON in this exact shape, no markdown, no extra text:
