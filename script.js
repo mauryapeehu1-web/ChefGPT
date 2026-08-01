@@ -759,3 +759,38 @@ heroSearchBtn.addEventListener('click', handleHeroSearch);
 heroSearchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') handleHeroSearch();
 });
+
+document.getElementById('see-more-drinks').addEventListener('click', () => {
+  openCategoryMenu('drink', 'Drinks');
+});
+async function searchAnyDishInCategory(query) {
+  if (!query) return;
+
+  recipeOptionsModal.classList.remove('open');
+  quickRecipeEmoji.textContent = '🍽️';
+  quickRecipeTitle.textContent = query;
+  quickRecipeMeta.textContent = 'Loading recipe...';
+  quickRecipeIngredients.innerHTML = '';
+  quickRecipeSteps.innerHTML = '';
+  quickRecipeModal.classList.add('open');
+
+  try {
+    const response = await fetch(GENERATE_RECIPE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'detail', dishName: query, type: currentCategoryType })
+    });
+    if (!response.ok) throw new Error('Failed to load recipe.');
+    const recipe = await response.json();
+    openRecipeDetail(recipe);
+  } catch (err) {
+    console.error('Category search failed:', err);
+    quickRecipeMeta.textContent = 'Sorry, could not find that recipe. Try a different name.';
+  }
+}
+categorySearchInputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    searchAnyDishInCategory(categorySearchInputEl.value.trim());
+  }
+});
