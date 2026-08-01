@@ -93,32 +93,44 @@ const reviewModal = document.getElementById('reviewModal');
 const reviewModalClose = document.getElementById('reviewModalClose');
 const reviewForm = document.getElementById('reviewForm');
 const newsletterForm = document.getElementById('newsletterForm');
+const newsletterBtn = newsletterForm.querySelector('button[type="submit"]');
+const newsletterEmailInput = newsletterForm.querySelector('input[type="email"]');
+
+function markNewsletterSubscribed() {
+  newsletterBtn.textContent = 'Already Subscribed ✓';
+  newsletterBtn.disabled = true;
+  newsletterEmailInput.disabled = true;
+}
+
+if (localStorage.getItem('chefgpt_newsletter_subscribed') === 'true') {
+  markNewsletterSubscribed();
+}
 
 newsletterForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const emailInput = newsletterForm.querySelector('input[type="email"]');
-  const email = emailInput.value.trim();
+  const email = newsletterEmailInput.value.trim();
 
-  const submitBtn = newsletterForm.querySelector('button[type="submit"]');
-  submitBtn.disabled = true;
+  newsletterBtn.disabled = true;
+  const originalLabel = newsletterBtn.textContent;
+  newsletterBtn.textContent = 'Subscribing...';
 
   const { error } = await supabaseClient.from('newsletter_signups').insert({ email });
 
-  submitBtn.disabled = false;
-
   if (error) {
     if (error.code === '23505') {
-      // unique constraint violation — this email already signed up
-      alert("You're already subscribed with this email!");
+      localStorage.setItem('chefgpt_newsletter_subscribed', 'true');
+      markNewsletterSubscribed();
     } else {
       console.error('Newsletter signup failed:', error);
       alert('Sorry, something went wrong. Please try again.');
+      newsletterBtn.disabled = false;
+      newsletterBtn.textContent = originalLabel;
     }
     return;
   }
 
-  alert('Thanks for subscribing! 🎉');
-  newsletterForm.reset();
+  localStorage.setItem('chefgpt_newsletter_subscribed', 'true');
+  markNewsletterSubscribed();
 });
 const stars = document.querySelectorAll('.star');
 const ratingValue = document.getElementById('ratingValue');
