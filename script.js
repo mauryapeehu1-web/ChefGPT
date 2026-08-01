@@ -719,3 +719,43 @@ quickRecipeModal.addEventListener('click', (e) => {
     quickRecipeModal.classList.remove('open');
   }
 });
+
+// Hero search box — fetch ANY dish/drink the user types, no category restriction
+const heroSearchInput = document.querySelector('.search-box input');
+const heroSearchBtn = document.querySelector('.search-box button');
+
+async function handleHeroSearch() {
+  const query = heroSearchInput.value.trim();
+  if (!query) return;
+
+  heroSearchBtn.disabled = true;
+
+  quickRecipeEmoji.textContent = '🍽️';
+  quickRecipeTitle.textContent = query;
+  quickRecipeMeta.textContent = 'Loading recipe...';
+  quickRecipeIngredients.innerHTML = '';
+  quickRecipeSteps.innerHTML = '';
+  quickRecipeModal.classList.add('open');
+
+  try {
+    const response = await fetch(GENERATE_RECIPE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'detail', dishName: query, type: 'any' }) // 'any' — no restriction
+    });
+    if (!response.ok) throw new Error('Failed to load recipe.');
+    const recipe = await response.json();
+    openRecipeDetail(recipe); // this sets currentOpenRecipe too, so Save works
+  } catch (err) {
+    console.error('Hero search failed:', err);
+    quickRecipeMeta.textContent = 'Sorry, could not find that recipe. Try a different name.';
+  } finally {
+    heroSearchBtn.disabled = false;
+    heroSearchInput.value = '';
+  }
+}
+
+heroSearchBtn.addEventListener('click', handleHeroSearch);
+heroSearchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') handleHeroSearch();
+});
