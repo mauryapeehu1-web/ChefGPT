@@ -92,6 +92,34 @@ const addReviewBtn = document.getElementById('addReviewBtn');
 const reviewModal = document.getElementById('reviewModal');
 const reviewModalClose = document.getElementById('reviewModalClose');
 const reviewForm = document.getElementById('reviewForm');
+const newsletterForm = document.getElementById('newsletterForm');
+
+newsletterForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const emailInput = newsletterForm.querySelector('input[type="email"]');
+  const email = emailInput.value.trim();
+
+  const submitBtn = newsletterForm.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+
+  const { error } = await supabaseClient.from('newsletter_signups').insert({ email });
+
+  submitBtn.disabled = false;
+
+  if (error) {
+    if (error.code === '23505') {
+      // unique constraint violation — this email already signed up
+      alert("You're already subscribed with this email!");
+    } else {
+      console.error('Newsletter signup failed:', error);
+      alert('Sorry, something went wrong. Please try again.');
+    }
+    return;
+  }
+
+  alert('Thanks for subscribing! 🎉');
+  newsletterForm.reset();
+});
 const stars = document.querySelectorAll('.star');
 const ratingValue = document.getElementById('ratingValue');
 const testimonialGrid = document.getElementById('testimonialGrid');
