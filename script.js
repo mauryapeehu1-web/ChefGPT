@@ -120,11 +120,7 @@ stars.forEach(star => {
   });
 });
 
-reviewForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const formData = new FormData(reviewForm);
-  const review = Object.fromEntries(formData);
-
+function buildTestimonialCard(review) {
   const initials = review.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   const starsHTML = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
 
@@ -140,7 +136,33 @@ reviewForm.addEventListener('submit', (e) => {
     </div>
     <p>"${review.comment}"</p>
   `;
-  testimonialGrid.prepend(card);
+  return card;
+}
+
+reviewForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const formData = new FormData(reviewForm);
+  const review = Object.fromEntries(formData);
+
+  const submitBtn = reviewForm.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+
+  const { error } = await supabaseClient.from('reviews').insert({
+    name: review.name,
+    rating: Number(review.rating),
+    comment: review.comment
+  });
+
+  submitBtn.disabled = false;
+
+  if (error) {
+    console.error('Failed to save review:', error);
+    alert('Sorry, something went wrong submitting your review. Please try again.');
+    return;
+  }
+
+  testimonialGrid.prepend(buildTestimonialCard(review));
+  applyReviewLimit();
 
   reviewForm.reset();
   stars.forEach(s => s.classList.remove('filled'));
@@ -1040,3 +1062,52 @@ async function renderTopSearches() {
     });
   });
 }
+
+async function loadReviews() {
+  const { data, error } = await supabaseClient
+    .from('reviews')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Failed to load reviews:', error);
+    return;
+  }
+
+  data.forEach(row => {
+    testimonialGrid.prepend(buildTestimonialCard({
+      name: row.name,
+      rating: row.rating,
+      comment: row.comment
+    }));
+  });
+
+  applyReviewLimit();
+}
+
+loadReviews();
+
+const seeAllReviewsBtn = document.getElementById('seeAllReviewsBtn');
+let reviewsExpanded = false;
+
+function applyReviewLimit() {
+  const cards = Array.from(testimonialGrid.querySelectorAll('.testimonial-card'));
+
+  if (reviewsExpanded || cards.length <= 3) {
+    cards.forEach(c => c.classList.remove('hidden-review'));
+    seeAllReviewsBtn.style.display = cards.length > 3 ? 'block' : 'none';
+    seeAllReviewsBtn.textContent = reviewsExpanded ? 'Show Less' : 'See All Reviews';
+    return;
+  }
+
+  cards.forEach((card, i) => {
+    card.classList.toggle('hidden-review', i >= 3);
+  });
+  seeAllReviewsBtn.style.display = 'block';
+  seeAllReviewsBtn.textContent = 'See All Reviews';
+}
+
+seeAllReviewsBtn.addEventListener('click', () => {
+  reviewsExpanded = !reviewsExpanded;
+  applyReviewLimit();
+});
