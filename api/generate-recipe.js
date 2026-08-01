@@ -95,7 +95,7 @@ Return ONLY valid JSON in this exact shape, no markdown, no extra text:
 }
 Include exactly 3 recipe objects inside the "recipes" array, each meaningfully different from the others (different dishes, not just minor variations).`;
 }
- try {
+try {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`,
     {

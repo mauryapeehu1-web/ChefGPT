@@ -225,11 +225,11 @@ seeAllFaqBtn.addEventListener('click', () => {
   faqExtraListEl.style.display = faqExpanded ? 'block' : 'none';
   seeAllFaqBtn.textContent = faqExpanded ? 'Show Less' : 'See All Questions';
 });
-
 async function loadFaqs() {
   const { data, error } = await supabaseClient
     .from('faqs')
     .select('*')
+    .not('answer', 'is', null)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -253,27 +253,18 @@ askSubmit.addEventListener('click', async () => {
   askSubmit.textContent = 'Submitting...';
 
   try {
-    const response = await fetch(GENERATE_RECIPE_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: 'faq', question })
-    });
-    if (!response.ok) throw new Error('Failed to get an answer.');
-    const result = await response.json();
-
     const { error } = await supabaseClient.from('faqs').insert({
       question,
-      answer: result.answer
+      answer: null
     });
     if (error) throw error;
 
-    addFaqToExtraList({ question, answer: result.answer });
-    alert('Thanks! Your question has been answered — check "See All Questions" below.');
+    alert("Thanks! Your question has been submitted. We'll answer it soon.");
     askInput.value = '';
     askQuestion.classList.remove('active');
   } catch (err) {
     console.error('FAQ submission failed:', err);
-    alert('Sorry, something went wrong answering your question. Please try again.');
+    alert('Sorry, something went wrong submitting your question. Please try again.');
   } finally {
     askSubmit.disabled = false;
     askSubmit.textContent = 'Submit Question';
