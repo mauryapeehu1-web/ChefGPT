@@ -80,7 +80,8 @@ Answer this user's question clearly and helpfully in 2-3 sentences: "${question}
 Return ONLY valid JSON, no markdown, no extra text, in this exact shape:
 { "answer": "your answer here" }`;
 } else {
-  Return ONLY valid JSON in this exact shape, no markdown, no extra text:
+  prompt = `Suggest 3 different recipes that can be made using these ingredients (it's okay if a recipe needs a few common extra items like salt, oil, or water): ${ingredients.join(', ')}. ${typeInstruction}
+Return ONLY valid JSON in this exact shape, no markdown, no extra text:
 {
   "recipes": [
     {
