@@ -1824,3 +1824,26 @@ body {
 .save-recipe-btn:hover {
   opacity: 0.9;
 }
+.page-heading {
+  font-size: 14px;
+  color: #264653;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.empty-page-msg {
+  font-size: 13px;
+  color: #9ca3af;
+  font-style: italic;
+}
+.recipe-entry-emoji {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #FFEDE6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}

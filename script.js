@@ -551,6 +551,7 @@ recipeOptionsModal.addEventListener('click', (e) => {
 let currentOpenRecipe = null;
 function openRecipeDetail(recipe) {
   currentOpenRecipe = recipe;
+  addToRecentSearches(recipe);
   quickRecipeEmoji.textContent = recipe.emoji;
   quickRecipeTitle.textContent = recipe.title;
   quickRecipeMeta.textContent = recipe.meta;
@@ -858,7 +859,7 @@ async function fetchDrinkRecipe(title) {
     quickRecipeMeta.textContent = 'Sorry, could not load this recipe. Please try again.';
   }
 }
-const STORAGE_KEYS = { saved: 'chefgpt_saved_recipes', shared: 'chefgpt_shared_recipes' };
+const STORAGE_KEYS = { saved: 'chefgpt_saved_recipes', shared: 'chefgpt_shared_recipes', recent: 'chefgpt_recent_searches' };
 function loadFromStorage(key) {
   try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; }
 }
@@ -899,7 +900,10 @@ function addSharedRecipeToPanel(recipe) {
 }
 
 function addSharedRecipeToBook(recipe) {
-  const page = document.querySelector('.page-right');
+  const list = document.getElementById('sharedRecipesList');
+  const emptyMsg = list.querySelector('.empty-page-msg');
+  if (emptyMsg) emptyMsg.remove();
+
   const entry = document.createElement('div');
   entry.className = 'recipe-entry';
   entry.style.cursor = 'pointer';
@@ -919,10 +923,48 @@ function addSharedRecipeToBook(recipe) {
       steps: recipe.steps.split('\n').filter(Boolean)
     });
   });
-  page.appendChild(entry);
+  list.appendChild(entry);
 }
+
 // Reload previously shared recipes when the page loads
 loadFromStorage(STORAGE_KEYS.shared).forEach(recipe => {
   addSharedRecipeToPanel(recipe);
   addSharedRecipeToBook(recipe);
 });
+renderTopSearches();
+function addToRecentSearches(recipe) {
+  let recent = loadFromStorage(STORAGE_KEYS.recent);
+  recent = recent.filter(r => r.title !== recipe.title); // no duplicates
+  recent.unshift(recipe); // newest first
+  recent = recent.slice(0, 6); // cap at 6
+  saveToStorage(STORAGE_KEYS.recent, recent);
+  renderTopSearches();
+}
+
+function renderTopSearches() {
+  const list = document.getElementById('topSearchesList');
+  const recent = loadFromStorage(STORAGE_KEYS.recent);
+
+  if (recent.length === 0) {
+    list.innerHTML = `<p class="empty-page-msg">Search or generate a recipe to see it here.</p>`;
+    return;
+  }
+
+  list.innerHTML = recent.map(r => `
+    <div class="recipe-entry recent-search-entry" data-title="${r.title}">
+      <div class="recipe-entry-emoji">${r.emoji || '🍽️'}</div>
+      <div>
+        <h3>${r.title}</h3>
+        <p>${r.meta || ''}</p>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.recent-search-entry').forEach(entryEl => {
+    entryEl.style.cursor = 'pointer';
+    entryEl.addEventListener('click', () => {
+      const match = recent.find(r => r.title === entryEl.dataset.title);
+      if (match) openRecipeDetail(match);
+    });
+  });
+}
