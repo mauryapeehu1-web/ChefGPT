@@ -1790,3 +1790,24 @@ body {
     flex-direction: column;
   }
 }
+
+.search-suggestions {
+  display: none;
+  position: relative;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-top: -6px;
+  margin-bottom: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+}
+.suggestion-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.suggestion-item:hover {
+  background: #f3f4f6;
+}

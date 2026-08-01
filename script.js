@@ -684,10 +684,33 @@ async function openCategoryMenu(type, label) {
   }
 }
 
+const categorySuggestionsEl = document.getElementById('categorySearchSuggestions');
+
 categorySearchInputEl.addEventListener('input', () => {
   const q = categorySearchInputEl.value.trim().toLowerCase();
   const filtered = currentCategoryDishes.filter(d => d.title.toLowerCase().includes(q));
   renderCategoryDishList(filtered);
+
+  if (!q || filtered.length === 0) {
+    categorySuggestionsEl.style.display = 'none';
+    categorySuggestionsEl.innerHTML = '';
+    return;
+  }
+
+  const matches = filtered.slice(0, 6);
+  categorySuggestionsEl.innerHTML = matches.map(d =>
+    `<div class="suggestion-item" data-title="${d.title}">${d.emoji} ${d.title}</div>`
+  ).join('');
+  categorySuggestionsEl.style.display = 'block';
+
+  categorySuggestionsEl.querySelectorAll('.suggestion-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const dish = currentCategoryDishes.find(d => d.title === item.dataset.title);
+      categorySuggestionsEl.style.display = 'none';
+      categorySearchInputEl.value = '';
+      if (dish) loadDishDetail(dish);
+    });
+  });
 });
 
 document.querySelectorAll('.category-card').forEach(card => {
@@ -799,3 +822,38 @@ categorySearchInputEl.addEventListener('keydown', (e) => {
     searchAnyDishInCategory(categorySearchInputEl.value.trim());
   }
 });
+
+// Make each drink card open its recipe
+document.querySelectorAll('.drink-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const title = card.querySelector('h3').textContent.trim();
+    fetchDrinkRecipe(title);
+  });
+});
+
+async function fetchDrinkRecipe(title) {
+  quickRecipeEmoji.textContent = '🥤';
+  quickRecipeTitle.textContent = title;
+  quickRecipeMeta.textContent = 'Loading recipe...';
+  quickRecipeIngredients.innerHTML = '';
+  quickRecipeSteps.innerHTML = '';
+  quickRecipeModal.classList.add('open');
+
+  try {
+    const response = await fetch(GENERATE_RECIPE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'detail', dishName: title, type: 'drink' })
+    });
+    if (!response.ok) throw new Error('Failed to load recipe.');
+    const recipe = await response.json();
+    if (recipe.error === 'not_in_category') {
+      quickRecipeMeta.textContent = `Sorry, couldn't find a drink recipe for "${title}".`;
+      return;
+    }
+    openRecipeDetail(recipe);
+  } catch (err) {
+    console.error('Drink card fetch failed:', err);
+    quickRecipeMeta.textContent = 'Sorry, could not load this recipe. Please try again.';
+  }
+}
