@@ -57,7 +57,14 @@ recipeForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const formData = new FormData(recipeForm);
   const recipe = Object.fromEntries(formData);
-  console.log('Submitted recipe:', recipe);
+
+  const sharedRecipes = loadFromStorage(STORAGE_KEYS.shared);
+  sharedRecipes.push(recipe);
+  saveToStorage(STORAGE_KEYS.shared, sharedRecipes);
+
+  addSharedRecipeToPanel(recipe);
+  addSharedRecipeToBook(recipe);
+
   alert(`Thanks! "${recipe.recipeName}" was submitted.`);
   recipeForm.reset();
   recipeModal.classList.remove('open');
@@ -851,8 +858,7 @@ async function fetchDrinkRecipe(title) {
     quickRecipeMeta.textContent = 'Sorry, could not load this recipe. Please try again.';
   }
 }
-const STORAGE_KEYS = { saved: 'chefgpt_saved_recipes' };
-
+const STORAGE_KEYS = { saved: 'chefgpt_saved_recipes', shared: 'chefgpt_shared_recipes' };
 function loadFromStorage(key) {
   try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; }
 }
@@ -885,3 +891,38 @@ function addSavedRecipeToPanel(recipe) {
 
 // Reload previously saved recipes when the page loads
 loadFromStorage(STORAGE_KEYS.saved).forEach(addSavedRecipeToPanel);
+function addSharedRecipeToPanel(recipe) {
+  const list = document.querySelectorAll('.panel-section .panel-list')[1]; // "your Shared recipe" list
+  const li = document.createElement('li');
+  li.textContent = `🍽️ ${recipe.recipeName}`;
+  list.appendChild(li);
+}
+
+function addSharedRecipeToBook(recipe) {
+  const page = document.querySelector('.page-right');
+  const entry = document.createElement('div');
+  entry.className = 'recipe-entry';
+  entry.style.cursor = 'pointer';
+  entry.innerHTML = `
+    <div class="recipe-thumb" style="background-image:url('${recipe.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200'}')"></div>
+    <div>
+      <h3>${recipe.recipeName}</h3>
+      <p>${recipe.cuisine}</p>
+    </div>
+  `;
+  entry.addEventListener('click', () => {
+    openRecipeDetail({
+      title: recipe.recipeName,
+      emoji: '🍽️',
+      meta: `${recipe.cuisine} • ${recipe.prepTime} mins`,
+      ingredients: recipe.ingredients.split('\n').filter(Boolean),
+      steps: recipe.steps.split('\n').filter(Boolean)
+    });
+  });
+  page.appendChild(entry);
+}
+// Reload previously shared recipes when the page loads
+loadFromStorage(STORAGE_KEYS.shared).forEach(recipe => {
+  addSharedRecipeToPanel(recipe);
+  addSharedRecipeToBook(recipe);
+});
