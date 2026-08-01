@@ -945,11 +945,32 @@ function addSharedRecipeToBook(recipe) {
   list.appendChild(entry);
 }
 
-// Reload previously shared recipes when the page loads
-loadFromStorage(STORAGE_KEYS.shared).forEach(recipe => {
-  addSharedRecipeToPanel(recipe);
-  addSharedRecipeToBook(recipe);
-});
+async function loadSharedRecipes() {
+  const { data, error } = await supabaseClient
+    .from('shared_recipes')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Failed to load shared recipes:', error);
+    return;
+  }
+
+  data.forEach(row => {
+    const recipe = {
+      recipeName: row.recipe_name,
+      cuisine: row.cuisine,
+      ingredients: row.ingredients,
+      steps: row.steps,
+      prepTime: row.prep_time,
+      imageUrl: row.image_url
+    };
+    addSharedRecipeToPanel(recipe);
+    addSharedRecipeToBook(recipe);
+  });
+}
+
+loadSharedRecipes();
 renderTopSearches();
 function addToRecentSearches(recipe) {
   let recent = loadFromStorage(STORAGE_KEYS.recent);
