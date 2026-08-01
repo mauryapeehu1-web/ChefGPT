@@ -541,8 +541,9 @@ recipeOptionsModal.addEventListener('click', (e) => {
     recipeOptionsModal.classList.remove('open');
   }
 });
-
+let currentOpenRecipe = null;
 function openRecipeDetail(recipe) {
+  currentOpenRecipe = recipe;
   quickRecipeEmoji.textContent = recipe.emoji;
   quickRecipeTitle.textContent = recipe.title;
   quickRecipeMeta.textContent = recipe.meta;
@@ -723,14 +724,7 @@ document.querySelectorAll('.suggestion-row').forEach(row => {
     const dishName = row.querySelector('.suggestion-dish').textContent.trim().replace(/^\S+\s/, '');
     const recipe = QUICK_RECIPES[dishName];
     if (!recipe) return;
-
-    quickRecipeEmoji.textContent = recipe.emoji;
-    quickRecipeTitle.textContent = dishName;
-    quickRecipeMeta.textContent = recipe.meta;
-    quickRecipeIngredients.innerHTML = recipe.ingredients.map(i => `<li>${i}</li>`).join('');
-    quickRecipeSteps.innerHTML = recipe.steps.map(s => `<li>${s}</li>`).join('');
-
-    quickRecipeModal.classList.add('open');
+    openRecipeDetail({ ...recipe, title: dishName });
   });
 });
 
@@ -857,3 +851,37 @@ async function fetchDrinkRecipe(title) {
     quickRecipeMeta.textContent = 'Sorry, could not load this recipe. Please try again.';
   }
 }
+const STORAGE_KEYS = { saved: 'chefgpt_saved_recipes' };
+
+function loadFromStorage(key) {
+  try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; }
+}
+function saveToStorage(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+document.getElementById('saveRecipeBtn').addEventListener('click', () => {
+  if (!currentOpenRecipe) return;
+
+  const saved = loadFromStorage(STORAGE_KEYS.saved);
+  const alreadySaved = saved.some(r => r.title === currentOpenRecipe.title);
+
+  if (alreadySaved) {
+    alert('Already saved!');
+    return;
+  }
+
+  saved.push(currentOpenRecipe);
+  saveToStorage(STORAGE_KEYS.saved, saved);
+  addSavedRecipeToPanel(currentOpenRecipe);
+  alert(`"${currentOpenRecipe.title}" saved to your recipes!`);
+});
+
+function addSavedRecipeToPanel(recipe) {
+  const list = document.querySelectorAll('.panel-section .panel-list')[0]; // "Your Saved Recipes" list
+  const li = document.createElement('li');
+  li.textContent = `${recipe.emoji} ${recipe.title}`;
+  list.appendChild(li);
+}
+
+// Reload previously saved recipes when the page loads
+loadFromStorage(STORAGE_KEYS.saved).forEach(addSavedRecipeToPanel);

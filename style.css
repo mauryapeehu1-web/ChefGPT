@@ -1811,3 +1811,16 @@ body {
 .suggestion-item:hover {
   background: #f3f4f6;
 }
+.save-recipe-btn {
+  background: #FF6B4A;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.save-recipe-btn:hover {
+  opacity: 0.9;
+}
