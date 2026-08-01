@@ -178,26 +178,14 @@ askToggle.addEventListener('click', () => {
   askQuestion.classList.toggle('active');
 });
 
-askSubmit.addEventListener('click', () => {
-  const question = askInput.value.trim();
-  if (question === '') {
-    alert('Please type a question first.');
-    return;
-  }
-  alert('Thanks! Your question has been submitted.');
-  askInput.value = '';
-  askQuestion.classList.remove('active');
-});
-const faqItems = document.querySelectorAll('.faq-item');
-
-faqItems.forEach(item => {
+function attachFaqAccordion(item) {
   const question = item.querySelector('.faq-question');
   const icon = item.querySelector('.faq-icon');
 
   question.addEventListener('click', () => {
     const isActive = item.classList.contains('active');
 
-    faqItems.forEach(i => {
+    document.querySelectorAll('.faq-item').forEach(i => {
       i.classList.remove('active');
       i.querySelector('.faq-icon').textContent = 'view answer';
     });
@@ -207,7 +195,92 @@ faqItems.forEach(item => {
       icon.textContent = 'hide answer';
     }
   });
+}
+
+document.querySelectorAll('.faq-item').forEach(attachFaqAccordion);
+
+const faqExtraListEl = document.getElementById('faqExtraList');
+const seeAllFaqBtn = document.getElementById('seeAllFaqBtn');
+let faqExpanded = false;
+
+function addFaqToExtraList(faq) {
+  const item = document.createElement('div');
+  item.className = 'faq-item';
+  item.innerHTML = `
+    <button class="faq-question">
+      ${faq.question}
+      <span class="faq-icon">view answer</span>
+    </button>
+    <div class="faq-answer">
+      <p>${faq.answer}</p>
+    </div>
+  `;
+  faqExtraListEl.appendChild(item);
+  attachFaqAccordion(item);
+  seeAllFaqBtn.style.display = 'block';
+}
+
+seeAllFaqBtn.addEventListener('click', () => {
+  faqExpanded = !faqExpanded;
+  faqExtraListEl.style.display = faqExpanded ? 'block' : 'none';
+  seeAllFaqBtn.textContent = faqExpanded ? 'Show Less' : 'See All Questions';
 });
+
+async function loadFaqs() {
+  const { data, error } = await supabaseClient
+    .from('faqs')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Failed to load FAQs:', error);
+    return;
+  }
+
+  data.forEach(row => addFaqToExtraList({ question: row.question, answer: row.answer }));
+}
+
+loadFaqs();
+
+askSubmit.addEventListener('click', async () => {
+  const question = askInput.value.trim();
+  if (question === '') {
+    alert('Please type a question first.');
+    return;
+  }
+
+  askSubmit.disabled = true;
+  askSubmit.textContent = 'Submitting...';
+
+  try {
+    const response = await fetch(GENERATE_RECIPE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'faq', question })
+    });
+    if (!response.ok) throw new Error('Failed to get an answer.');
+    const result = await response.json();
+
+    const { error } = await supabaseClient.from('faqs').insert({
+      question,
+      answer: result.answer
+    });
+    if (error) throw error;
+
+    addFaqToExtraList({ question, answer: result.answer });
+    alert('Thanks! Your question has been answered — check "See All Questions" below.');
+    askInput.value = '';
+    askQuestion.classList.remove('active');
+  } catch (err) {
+    console.error('FAQ submission failed:', err);
+    alert('Sorry, something went wrong answering your question. Please try again.');
+  } finally {
+    askSubmit.disabled = false;
+    askSubmit.textContent = 'Submit Question';
+  }
+});
+
+
 const aboutDevLink = document.getElementById('aboutDevLink');
 const devModal = document.getElementById('devModal');
 const devModalClose = document.getElementById('devModalClose');

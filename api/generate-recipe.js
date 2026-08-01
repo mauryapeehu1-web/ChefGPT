@@ -12,9 +12,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
-const { ingredients, type, mode, dishName } = req.body || {};
+const { ingredients, type, mode, dishName, question } = req.body || {};
 
-if (mode !== 'list' && mode !== 'detail') {
+if (mode !== 'list' && mode !== 'detail' && mode !== 'faq') {
   if (!Array.isArray(ingredients) || ingredients.length === 0) {
     return res.status(400).json({ error: 'Please provide a non-empty "ingredients" array.' });
   }
@@ -71,9 +71,16 @@ Return ONLY valid JSON, no markdown, no extra text, in this exact shape:
   "ingredients": ["ingredient 1", "ingredient 2"],
   "steps": ["step 1", "step 2"]
 }`;
+} else if (mode === 'faq') {
+  if (!question || typeof question !== 'string') {
+    return res.status(400).json({ error: 'Missing "question" for faq mode.' });
+  }
+  prompt = `You are answering a frequently asked question for a recipe website called ChefGPT, which uses AI to generate recipes from ingredients the user has at home.
+Answer this user's question clearly and helpfully in 2-3 sentences: "${question}"
+Return ONLY valid JSON, no markdown, no extra text, in this exact shape:
+{ "answer": "your answer here" }`;
 } else {
-  prompt = `Suggest 3 different Indian recipes using these ingredients: ${ingredients.join(', ')}. ${typeInstruction}
-Return ONLY valid JSON in this exact shape, no markdown, no extra text:
+  Return ONLY valid JSON in this exact shape, no markdown, no extra text:
 {
   "recipes": [
     {
