@@ -1,3 +1,6 @@
+const SUPABASE_URL = 'https://aadmscufygmylmsrhwzu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_2Nlqj4hTzNY6wewshC4S1w_53oq9ptj';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const coverPage = document.getElementById('coverPage');
 const turnBtn = document.getElementById('turnBtn');
 const closeBtn = document.getElementById('closeBtn');
@@ -53,14 +56,30 @@ recipeModal.addEventListener('click', (e) => {
   }
 });
 
-recipeForm.addEventListener('submit', (e) => {
+recipeForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const formData = new FormData(recipeForm);
   const recipe = Object.fromEntries(formData);
 
-  const sharedRecipes = loadFromStorage(STORAGE_KEYS.shared);
-  sharedRecipes.push(recipe);
-  saveToStorage(STORAGE_KEYS.shared, sharedRecipes);
+  const submitBtn = recipeForm.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+
+  const { error } = await supabaseClient.from('shared_recipes').insert({
+    recipe_name: recipe.recipeName,
+    cuisine: recipe.cuisine,
+    ingredients: recipe.ingredients,
+    steps: recipe.steps,
+    prep_time: recipe.prepTime,
+    image_url: recipe.imageUrl || null
+  });
+
+  submitBtn.disabled = false;
+
+  if (error) {
+    console.error('Failed to save shared recipe:', error);
+    alert('Sorry, something went wrong submitting your recipe. Please try again.');
+    return;
+  }
 
   addSharedRecipeToPanel(recipe);
   addSharedRecipeToBook(recipe);
