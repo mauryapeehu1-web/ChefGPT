@@ -972,39 +972,71 @@ async function loadSharedRecipes() {
 
 loadSharedRecipes();
 renderTopSearches();
-function addToRecentSearches(recipe) {
-  let recent = loadFromStorage(STORAGE_KEYS.recent);
-  recent = recent.filter(r => r.title !== recipe.title); // no duplicates
-  recent.unshift(recipe); // newest first
-  recent = recent.slice(0, 6); // cap at 6
-  saveToStorage(STORAGE_KEYS.recent, recent);
+async function addToRecentSearches(recipe) {
+  const { error } = await supabaseClient.rpc('increment_search', {
+    p_title: recipe.title,
+    p_emoji: recipe.emoji || '🍽️',
+    p_meta: recipe.meta || ''
+  });
+  if (error) {
+    console.error('Failed to record search:', error);
+    return;
+  }
   renderTopSearches();
 }
-
-function renderTopSearches() {
+async function renderTopSearches() {
   const list = document.getElementById('topSearchesList');
-  const recent = loadFromStorage(STORAGE_KEYS.recent);
 
-  if (recent.length === 0) {
+  const { data, error } = await supabaseClient
+    .from('top_searches')
+    .select('*')
+    .order('search_count', { ascending: false })
+    .limit(6);
+
+  if (error) {
+    console.error('Failed to load top searches:', error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
     list.innerHTML = `<p class="empty-page-msg">Search or generate a recipe to see it here.</p>`;
     return;
   }
 
-  list.innerHTML = recent.map(r => `
+  list.innerHTML = data.map(r => `
     <div class="recipe-entry recent-search-entry" data-title="${r.title}">
       <div class="recipe-entry-emoji">${r.emoji || '🍽️'}</div>
       <div>
         <h3>${r.title}</h3>
-        <p>${r.meta || ''}</p>
+        <p>${r.meta || ''} • searched ${r.search_count}×</p>
       </div>
     </div>
   `).join('');
 
   list.querySelectorAll('.recent-search-entry').forEach(entryEl => {
     entryEl.style.cursor = 'pointer';
-    entryEl.addEventListener('click', () => {
-      const match = recent.find(r => r.title === entryEl.dataset.title);
-      if (match) openRecipeDetail(match);
+    entryEl.addEventListener('click', async () => {
+      const title = entryEl.dataset.title;
+      quickRecipeEmoji.textContent = '🍽️';
+      quickRecipeTitle.textContent = title;
+      quickRecipeMeta.textContent = 'Loading recipe...';
+      quickRecipeIngredients.innerHTML = '';
+      quickRecipeSteps.innerHTML = '';
+      quickRecipeModal.classList.add('open');
+
+      try {
+        const response = await fetch(GENERATE_RECIPE_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'detail', dishName: title, type: 'any' })
+        });
+        if (!response.ok) throw new Error('Failed to load recipe.');
+        const recipe = await response.json();
+        openRecipeDetail(recipe);
+      } catch (err) {
+        console.error('Top search reopen failed:', err);
+        quickRecipeMeta.textContent = 'Sorry, could not load this recipe. Please try again.';
+      }
     });
   });
 }
