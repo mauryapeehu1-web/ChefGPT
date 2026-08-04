@@ -180,13 +180,24 @@ authForm.addEventListener('submit', async (e) => {
     }
 
     // Save the username -> email link so login can find it later.
-    if (data.user) {
-      await supabaseClient.from('usernames').insert({
-        username,
-        user_id: data.user.id,
-        email: realEmail
-      });
-    }
+if (data.user) {
+  const { error: insertError } = await supabase
+    .from("usernames")
+    .insert({
+      username,
+      user_id: data.user.id,
+      email: realEmail
+    });
+
+  if (insertError) {
+    console.error("Username insert failed:", insertError);
+    authError.textContent = "Failed to save username.";
+    authError.classList.add("visible");
+    return;
+  }
+
+  console.log("Username saved successfully!");
+}
 
     if (!data.session) {
       authError.textContent = 'Account created! Check your email to confirm, then log in with your username.';
