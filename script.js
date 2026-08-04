@@ -181,7 +181,7 @@ authForm.addEventListener('submit', async (e) => {
 
     // Save the username -> email link so login can find it later.
 if (data.user) {
-  const { error: insertError } = await supabase
+  const { error: insertError } = await supabaseClient
     .from("usernames")
     .insert({
       username,
