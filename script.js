@@ -24,7 +24,12 @@ const authModalClose = document.getElementById('authModalClose');
 const authForm = document.getElementById('authForm');
 const authNameField = document.getElementById('authNameField');
 const authName = document.getElementById('authName');
-const authEmail = document.getElementById('authEmail');
+const authUsernameField = document.getElementById('authUsernameField');
+const authUsername = document.getElementById('authUsername');
+const authEmail = document.getElementById('authEmail'); // doubles as "username" input in login mode
+const authEmailLabel = document.getElementById('authEmailLabel');
+const authEmailField = document.getElementById('authEmailField');
+const authRealEmail = document.getElementById('authRealEmail');
 const authPassword = document.getElementById('authPassword');
 const authError = document.getElementById('authError');
 const authSubmitBtn = document.getElementById('authSubmitBtn');
@@ -40,9 +45,9 @@ let authMode = 'login'; // 'login' or 'signup'
 function applyAuthUI(user) {
   currentUser = user;
   if (user) {
-    loginBtn.textContent = user.user_metadata?.full_name || 'Account';
+    loginBtn.textContent = user.user_metadata?.username || 'Account';
     userWelcome.textContent = `Welcome back, ${user.user_metadata?.full_name || 'friend'}!`;
-    userEmail.textContent = user.email || '';
+    userEmail.textContent = user.user_metadata?.username ? `@${user.user_metadata.username}` : '';
   } else {
     loginBtn.textContent = 'login';
     userWelcome.textContent = 'Welcome back!';
@@ -70,6 +75,13 @@ function openAuthModal(mode) {
     authModalSubtitle.textContent = 'Create your ChefGPT account';
     authNameField.style.display = 'block';
     authName.required = true;
+    authUsernameField.style.display = 'block';
+    authUsername.required = true;
+    authEmailField.style.display = 'block';
+    authRealEmail.required = true;
+    authEmailLabel.style.display = 'none';
+    authEmail.style.display = 'none';
+    authEmail.required = false;
     authSubmitBtn.textContent = 'Sign Up';
     authSwitchText.textContent = 'Already have an account?';
     authSwitchLink.textContent = 'Log in';
@@ -78,6 +90,13 @@ function openAuthModal(mode) {
     authModalSubtitle.textContent = 'Welcome back to ChefGPT';
     authNameField.style.display = 'none';
     authName.required = false;
+    authUsernameField.style.display = 'none';
+    authUsername.required = false;
+    authEmailField.style.display = 'none';
+    authRealEmail.required = false;
+    authEmailLabel.style.display = 'block';
+    authEmail.style.display = 'block';
+    authEmail.required = true;
     authSubmitBtn.textContent = 'Log In';
     authSwitchText.textContent = "Don't have an account?";
     authSwitchLink.textContent = 'Sign up';
@@ -121,37 +140,95 @@ authForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   authError.classList.remove('visible', 'success');
 
-  const email = authEmail.value.trim();
   const password = authPassword.value;
-
   authSubmitBtn.disabled = true;
-  authSubmitBtn.textContent = authMode === 'signup' ? 'Signing up...' : 'Logging in...';
 
-  let result;
   if (authMode === 'signup') {
-    result = await supabaseClient.auth.signUp({
-      email,
+    authSubmitBtn.textContent = 'Signing up...';
+    const username = authUsername.value.trim().toLowerCase();
+    const realEmail = authRealEmail.value.trim();
+    const fullName = authName.value.trim();
+
+    // Make sure this username isn't already taken.
+    const { data: existing } = await supabaseClient
+      .from('usernames')
+      .select('username')
+      .eq('username', username)
+      .maybeSingle();
+
+    if (existing) {
+      authSubmitBtn.disabled = false;
+      authSubmitBtn.textContent = 'Sign Up';
+      authError.textContent = 'That username is already taken.';
+      authError.classList.add('visible');
+      return;
+    }
+
+    const { data, error } = await supabaseClient.auth.signUp({
+      email: realEmail,
       password,
-      options: {
-        data: { full_name: authName.value.trim() }
-      }
+      options: { data: { full_name: fullName, username } }
     });
-  } else {
-    result = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    authSubmitBtn.disabled = false;
+    authSubmitBtn.textContent = 'Sign Up';
+
+    if (error) {
+      authError.textContent = error.message;
+      authError.classList.add('visible');
+      return;
+    }
+
+    // Save the username -> email link so login can find it later.
+    if (data.user) {
+      await supabaseClient.from('usernames').insert({
+        username,
+        user_id: data.user.id,
+        email: realEmail
+      });
+    }
+
+    if (!data.session) {
+      authError.textContent = 'Account created! Check your email to confirm, then log in with your username.';
+      authError.classList.add('visible', 'success');
+      return;
+    }
+
+    authModal.classList.remove('open');
+    authForm.reset();
+    userPanel.classList.add('open');
+    return;
   }
 
-  authSubmitBtn.disabled = false;
-  authSubmitBtn.textContent = authMode === 'signup' ? 'Sign Up' : 'Log In';
+  // Login mode: translate the typed username into its email first.
+  authSubmitBtn.textContent = 'Logging in...';
+  const username = authEmail.value.trim().toLowerCase();
 
-  if (result.error) {
-    authError.textContent = result.error.message;
+  const { data: userRow, error: lookupError } = await supabaseClient
+    .from('usernames')
+    .select('email')
+    .eq('username', username)
+    .maybeSingle();
+
+  if (lookupError || !userRow) {
+    authSubmitBtn.disabled = false;
+    authSubmitBtn.textContent = 'Log In';
+    authError.textContent = 'No account found with that username.';
     authError.classList.add('visible');
     return;
   }
 
-  if (authMode === 'signup' && !result.data.session) {
-    authError.textContent = 'Account created! Check your email to confirm, then log in.';
-    authError.classList.add('visible', 'success');
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email: userRow.email,
+    password
+  });
+
+  authSubmitBtn.disabled = false;
+  authSubmitBtn.textContent = 'Log In';
+
+  if (error) {
+    authError.textContent = error.message;
+    authError.classList.add('visible');
     return;
   }
 
