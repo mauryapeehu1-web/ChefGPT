@@ -1040,7 +1040,8 @@ body {
   color: #777;
 }
 #recipeForm label,
-#reviewForm label {
+#reviewForm label,
+#authForm label {
   display: block;
   font-size: 13px;
   font-weight: bold;
@@ -1050,7 +1051,8 @@ body {
 #recipeForm input,
 #recipeForm textarea,
 #reviewForm input,
-#reviewForm textarea {
+#reviewForm textarea,
+#authForm input {
   width: 100%;
   padding: 10px 12px;
   border-radius: 8px;
@@ -1063,9 +1065,42 @@ body {
 #recipeForm input:focus,
 #recipeForm textarea:focus,
 #reviewForm input:focus,
-#reviewForm textarea:focus {
+#reviewForm textarea:focus,
+#authForm input:focus {
   outline: none;
   border-color: #FF6B4A;
+}
+.auth-error {
+  font-size: 13px;
+  color: #e5484d;
+  margin: 10px 0 0;
+  display: none;
+}
+.auth-error.visible {
+  display: block;
+}
+.auth-error.success {
+  color: #2a9d8f;
+}
+.auth-switch {
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+  margin: 16px 0 0;
+}
+.auth-switch a {
+  color: #FF6B4A;
+  font-weight: bold;
+  text-decoration: none;
+}
+.auth-switch a:hover {
+  text-decoration: underline;
+}
+.user-email {
+  font-size: 13px;
+  color: #6b7280;
+  margin: -8px 0 12px;
+  text-align: center;
 }
 .modal-submit {
   width: 100%;

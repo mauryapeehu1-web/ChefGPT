@@ -16,17 +16,148 @@ const loginBtn = document.getElementById('cta-btn');
 const userPanel = document.getElementById('userPanel');
 const closePanel = document.getElementById('closePanel');
 const logoutBtn = document.getElementById('logoutBtn');
+const userWelcome = document.getElementById('userWelcome');
+const userEmail = document.getElementById('userEmail');
+
+const authModal = document.getElementById('authModal');
+const authModalClose = document.getElementById('authModalClose');
+const authForm = document.getElementById('authForm');
+const authNameField = document.getElementById('authNameField');
+const authName = document.getElementById('authName');
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const authError = document.getElementById('authError');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+const authModalTitle = document.getElementById('authModalTitle');
+const authModalSubtitle = document.getElementById('authModalSubtitle');
+const authSwitchText = document.getElementById('authSwitchText');
+const authSwitchLink = document.getElementById('authSwitchLink');
+
+let currentUser = null;
+let authMode = 'login'; // 'login' or 'signup'
+
+// Keep the UI in sync with whether someone is actually logged in.
+function applyAuthUI(user) {
+  currentUser = user;
+  if (user) {
+    loginBtn.textContent = user.user_metadata?.full_name || 'Account';
+    userWelcome.textContent = `Welcome back, ${user.user_metadata?.full_name || 'friend'}!`;
+    userEmail.textContent = user.email || '';
+  } else {
+    loginBtn.textContent = 'login';
+    userWelcome.textContent = 'Welcome back!';
+    userEmail.textContent = '';
+    userPanel.classList.remove('open');
+  }
+}
+
+// Restore session on page load (e.g. after a refresh).
+supabaseClient.auth.getSession().then(({ data }) => {
+  applyAuthUI(data.session ? data.session.user : null);
+});
+
+// React to login/logout/token refresh anywhere in the app.
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  applyAuthUI(session ? session.user : null);
+});
+
+function openAuthModal(mode) {
+  authMode = mode;
+  authError.classList.remove('visible', 'success');
+  authForm.reset();
+  if (mode === 'signup') {
+    authModalTitle.textContent = 'Sign Up';
+    authModalSubtitle.textContent = 'Create your ChefGPT account';
+    authNameField.style.display = 'block';
+    authName.required = true;
+    authSubmitBtn.textContent = 'Sign Up';
+    authSwitchText.textContent = 'Already have an account?';
+    authSwitchLink.textContent = 'Log in';
+  } else {
+    authModalTitle.textContent = 'Log In';
+    authModalSubtitle.textContent = 'Welcome back to ChefGPT';
+    authNameField.style.display = 'none';
+    authName.required = false;
+    authSubmitBtn.textContent = 'Log In';
+    authSwitchText.textContent = "Don't have an account?";
+    authSwitchLink.textContent = 'Sign up';
+  }
+  authModal.classList.add('open');
+}
 
 loginBtn.addEventListener('click', () => {
-  userPanel.classList.add('open');
+  if (currentUser) {
+    userPanel.classList.add('open');
+  } else {
+    openAuthModal('login');
+  }
 });
 
 closePanel.addEventListener('click', () => {
   userPanel.classList.remove('open');
 });
 
-logoutBtn.addEventListener('click', () => {
+logoutBtn.addEventListener('click', async () => {
+  await supabaseClient.auth.signOut();
   userPanel.classList.remove('open');
+});
+
+authModalClose.addEventListener('click', () => {
+  authModal.classList.remove('open');
+});
+
+authModal.addEventListener('click', (e) => {
+  if (e.target === authModal) {
+    authModal.classList.remove('open');
+  }
+});
+
+authSwitchLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  openAuthModal(authMode === 'login' ? 'signup' : 'login');
+});
+
+authForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  authError.classList.remove('visible', 'success');
+
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+
+  authSubmitBtn.disabled = true;
+  authSubmitBtn.textContent = authMode === 'signup' ? 'Signing up...' : 'Logging in...';
+
+  let result;
+  if (authMode === 'signup') {
+    result = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: authName.value.trim() }
+      }
+    });
+  } else {
+    result = await supabaseClient.auth.signInWithPassword({ email, password });
+  }
+
+  authSubmitBtn.disabled = false;
+  authSubmitBtn.textContent = authMode === 'signup' ? 'Sign Up' : 'Log In';
+
+  if (result.error) {
+    authError.textContent = result.error.message;
+    authError.classList.add('visible');
+    return;
+  }
+
+  if (authMode === 'signup' && !result.data.session) {
+    authError.textContent = 'Account created! Check your email to confirm, then log in.';
+    authError.classList.add('visible', 'success');
+    return;
+  }
+
+  authModal.classList.remove('open');
+  authForm.reset();
+  userPanel.classList.add('open');
 });
 const panelToggles = document.querySelectorAll('.panel-toggle');
 
