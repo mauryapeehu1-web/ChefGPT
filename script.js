@@ -48,17 +48,20 @@ const authSwitchLink = document.getElementById('authSwitchLink');
 let currentUser = null;
 let authMode = 'login'; // 'login' or 'signup'
 
-// Keep the UI in sync with whether someone is actually logged in.
 function applyAuthUI(user) {
   currentUser = user;
   if (user) {
     const username = user.user_metadata?.username;
-    loginBtn.textContent = username || 'Account';
+    loginBtn.textContent = username ? username[0].toUpperCase() : 'A';
+    loginBtn.classList.add('is-avatar');
+    loginBtn.title = username ? `@${username}` : 'Account';
     userWelcome.textContent = `Welcome back, ${user.user_metadata?.full_name || 'friend'}!`;
     userEmail.textContent = username ? `@${username}` : '';
     userAvatarLarge.textContent = username ? username[0].toUpperCase() : '👤';
   } else {
     loginBtn.textContent = 'login';
+    loginBtn.classList.remove('is-avatar');
+    loginBtn.removeAttribute('title');
     userWelcome.textContent = 'Welcome back!';
     userEmail.textContent = '';
     userAvatarLarge.textContent = '👤';
