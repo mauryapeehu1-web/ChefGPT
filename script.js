@@ -28,9 +28,15 @@ const authUsernameField = document.getElementById('authUsernameField');
 const authUsername = document.getElementById('authUsername');
 const authEmail = document.getElementById('authEmail'); // doubles as "username" input in login mode
 const authEmailLabel = document.getElementById('authEmailLabel');
-const authEmailField = document.getElementById('authEmailField');
-const authRealEmail = document.getElementById('authRealEmail');
 const authPassword = document.getElementById('authPassword');
+
+// Supabase Auth needs *some* email under the hood, but we never collect a real
+// one. We turn the chosen username into a fake, never-emailed address like
+// "alex123@chefgpt.local" and use that as the account identifier. The user
+// only ever sees "Username" + "Password".
+function usernameToFakeEmail(username) {
+  return `${username}@chefgpt.local`;
+}
 const authError = document.getElementById('authError');
 const authSubmitBtn = document.getElementById('authSubmitBtn');
 const authModalTitle = document.getElementById('authModalTitle');
@@ -77,8 +83,6 @@ function openAuthModal(mode) {
     authName.required = true;
     authUsernameField.style.display = 'block';
     authUsername.required = true;
-    authEmailField.style.display = 'block';
-    authRealEmail.required = true;
     authEmailLabel.style.display = 'none';
     authEmail.style.display = 'none';
     authEmail.required = false;
@@ -92,8 +96,6 @@ function openAuthModal(mode) {
     authName.required = false;
     authUsernameField.style.display = 'none';
     authUsername.required = false;
-    authEmailField.style.display = 'none';
-    authRealEmail.required = false;
     authEmailLabel.style.display = 'block';
     authEmail.style.display = 'block';
     authEmail.required = true;
@@ -146,26 +148,18 @@ authForm.addEventListener('submit', async (e) => {
   if (authMode === 'signup') {
     authSubmitBtn.textContent = 'Signing up...';
     const username = authUsername.value.trim().toLowerCase();
-    const realEmail = authRealEmail.value.trim();
     const fullName = authName.value.trim();
 
-    // Make sure this username isn't already taken.
-    const { data: existing } = await supabaseClient
-      .from('usernames')
-      .select('username')
-      .eq('username', username)
-      .maybeSingle();
-
-    if (existing) {
+    if (!/^[a-z0-9_]{3,20}$/.test(username)) {
       authSubmitBtn.disabled = false;
       authSubmitBtn.textContent = 'Sign Up';
-      authError.textContent = 'That username is already taken.';
+      authError.textContent = 'Username must be 3-20 characters: letters, numbers, underscore only.';
       authError.classList.add('visible');
       return;
     }
 
     const { data, error } = await supabaseClient.auth.signUp({
-      email: realEmail,
+      email: usernameToFakeEmail(username),
       password,
       options: { data: { full_name: fullName, username } }
     });
@@ -174,34 +168,21 @@ authForm.addEventListener('submit', async (e) => {
     authSubmitBtn.textContent = 'Sign Up';
 
     if (error) {
-      authError.textContent = error.message;
+      // Supabase itself enforces that the (fake) email is unique, so this
+      // is what fires when the username is already taken.
+      const takenMessages = ['already registered', 'already exists', 'already been registered'];
+      const isTaken = takenMessages.some(m => error.message.toLowerCase().includes(m));
+      authError.textContent = isTaken ? 'That username is already taken.' : error.message;
       authError.classList.add('visible');
       return;
     }
 
-    // Save the username -> email link so login can find it later.
-if (data.user) {
-  const { error: insertError } = await supabaseClient
-    .from("usernames")
-    .insert({
-      username,
-      user_id: data.user.id,
-      email: realEmail
-    });
-
-  if (insertError) {
-    console.error("Username insert failed:", insertError);
-    authError.textContent = "Failed to save username.";
-    authError.classList.add("visible");
-    return;
-  }
-
-  console.log("Username saved successfully!");
-}
-
     if (!data.session) {
-      authError.textContent = 'Account created! Check your email to confirm, then log in with your username.';
-      authError.classList.add('visible', 'success');
+      // This means "Confirm email" is still turned on in the Supabase
+      // dashboard. Since we never send a real email, that confirmation
+      // link can never arrive - so this setting must be OFF (see note below).
+      authError.textContent = 'Account created, but login is blocked. Ask the site owner to disable "Confirm email" in Supabase.';
+      authError.classList.add('visible');
       return;
     }
 
@@ -211,26 +192,12 @@ if (data.user) {
     return;
   }
 
-  // Login mode: translate the typed username into its email first.
+  // Login mode: the typed username IS the account, translated to its fake email.
   authSubmitBtn.textContent = 'Logging in...';
   const username = authEmail.value.trim().toLowerCase();
 
-  const { data: userRow, error: lookupError } = await supabaseClient
-    .from('usernames')
-    .select('email')
-    .eq('username', username)
-    .maybeSingle();
-
-  if (lookupError || !userRow) {
-    authSubmitBtn.disabled = false;
-    authSubmitBtn.textContent = 'Log In';
-    authError.textContent = 'No account found with that username.';
-    authError.classList.add('visible');
-    return;
-  }
-
   const { error } = await supabaseClient.auth.signInWithPassword({
-    email: userRow.email,
+    email: usernameToFakeEmail(username),
     password
   });
 
@@ -238,7 +205,7 @@ if (data.user) {
   authSubmitBtn.textContent = 'Log In';
 
   if (error) {
-    authError.textContent = error.message;
+    authError.textContent = 'Incorrect username or password.';
     authError.classList.add('visible');
     return;
   }
