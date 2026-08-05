@@ -67,6 +67,7 @@ function applyAuthUI(user) {
     userAvatarLarge.textContent = '👤';
     userPanel.classList.remove('open');
   }
+  refreshNewsletterUI();
 }
 
 // Restore session on page load (e.g. after a refresh).
@@ -289,15 +290,36 @@ const newsletterForm = document.getElementById('newsletterForm');
 const newsletterBtn = newsletterForm.querySelector('button[type="submit"]');
 const newsletterEmailInput = newsletterForm.querySelector('input[type="email"]');
 
+// The "subscribed" flag is tied to the logged-in account now, not the whole browser -
+// so switching accounts on the same device shows the correct state for each person.
+function newsletterKey() {
+  return currentUser ? `chefgpt_newsletter_subscribed_${currentUser.id}` : null;
+}
+
 function markNewsletterSubscribed() {
   newsletterBtn.textContent = 'Already Subscribed ✓';
   newsletterBtn.disabled = true;
   newsletterEmailInput.disabled = true;
 }
 
-if (localStorage.getItem('chefgpt_newsletter_subscribed') === 'true') {
-  markNewsletterSubscribed();
+function resetNewsletterUI() {
+  newsletterBtn.textContent = 'Subscribe';
+  newsletterBtn.disabled = false;
+  newsletterEmailInput.disabled = false;
+  newsletterEmailInput.value = '';
 }
+
+// Re-checks the subscribed state for whoever is currently logged in (or logged out).
+function refreshNewsletterUI() {
+  const key = newsletterKey();
+  if (key && localStorage.getItem(key) === 'true') {
+    markNewsletterSubscribed();
+  } else {
+    resetNewsletterUI();
+  }
+}
+
+refreshNewsletterUI();
 
 newsletterForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -311,7 +333,8 @@ newsletterForm.addEventListener('submit', async (e) => {
 
   if (error) {
     if (error.code === '23505') {
-      localStorage.setItem('chefgpt_newsletter_subscribed', 'true');
+      const key = newsletterKey();
+      if (key) localStorage.setItem(key, 'true');
       markNewsletterSubscribed();
     } else {
       console.error('Newsletter signup failed:', error);
@@ -322,7 +345,8 @@ newsletterForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  localStorage.setItem('chefgpt_newsletter_subscribed', 'true');
+  const key = newsletterKey();
+  if (key) localStorage.setItem(key, 'true');
   markNewsletterSubscribed();
 });
 const stars = document.querySelectorAll('.star');
