@@ -18,6 +18,7 @@ const closePanel = document.getElementById('closePanel');
 const logoutBtn = document.getElementById('logoutBtn');
 const userWelcome = document.getElementById('userWelcome');
 const userEmail = document.getElementById('userEmail');
+const userAvatarLarge = document.getElementById('userAvatarLarge');
 
 const authModal = document.getElementById('authModal');
 const authModalClose = document.getElementById('authModalClose');
@@ -51,13 +52,16 @@ let authMode = 'login'; // 'login' or 'signup'
 function applyAuthUI(user) {
   currentUser = user;
   if (user) {
-    loginBtn.textContent = user.user_metadata?.username || 'Account';
+    const username = user.user_metadata?.username;
+    loginBtn.textContent = username || 'Account';
     userWelcome.textContent = `Welcome back, ${user.user_metadata?.full_name || 'friend'}!`;
-    userEmail.textContent = user.user_metadata?.username ? `@${user.user_metadata.username}` : '';
+    userEmail.textContent = username ? `@${username}` : '';
+    userAvatarLarge.textContent = username ? username[0].toUpperCase() : '👤';
   } else {
     loginBtn.textContent = 'login';
     userWelcome.textContent = 'Welcome back!';
     userEmail.textContent = '';
+    userAvatarLarge.textContent = '👤';
     userPanel.classList.remove('open');
   }
 }
@@ -1214,20 +1218,78 @@ document.getElementById('saveRecipeBtn').addEventListener('click', () => {
   alert(`"${currentOpenRecipe.title}" saved to your recipes!`);
 });
 
+// Builds one clickable, removable row for the "Your Saved Recipes" panel list.
 function addSavedRecipeToPanel(recipe) {
-  const list = document.querySelectorAll('.panel-section .panel-list')[0]; // "Your Saved Recipes" list
+  const list = document.getElementById('savedRecipesPanelList');
+  const emptyMsg = list.querySelector('.panel-empty');
+  if (emptyMsg) emptyMsg.remove();
+
   const li = document.createElement('li');
-  li.textContent = `${recipe.emoji} ${recipe.title}`;
+  li.className = 'panel-recipe-item';
+  li.innerHTML = `
+    <div class="panel-recipe-icon">${recipe.emoji || '🍽️'}</div>
+    <div class="panel-recipe-info">
+      <span class="panel-recipe-title">${recipe.title}</span>
+      <span class="panel-recipe-meta">${recipe.meta || 'Tap to view recipe'}</span>
+    </div>
+    <button class="panel-recipe-remove" title="Remove">✕</button>
+  `;
+
+  // Clicking the row opens the full recipe - we already have all its data saved locally.
+  li.addEventListener('click', () => {
+    openRecipeDetail(recipe);
+    userPanel.classList.remove('open');
+  });
+
+  // The ✕ button removes it without opening the recipe.
+  li.querySelector('.panel-recipe-remove').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const remaining = loadFromStorage(STORAGE_KEYS.saved).filter(r => r.title !== recipe.title);
+    saveToStorage(STORAGE_KEYS.saved, remaining);
+    li.remove();
+    if (!list.querySelector('.panel-recipe-item')) {
+      list.innerHTML = '<li class="panel-empty">No saved recipes yet — hit 💾 Save on any recipe to keep it here.</li>';
+    }
+  });
+
   list.appendChild(li);
 }
 
 // Reload previously saved recipes when the page loads
 loadFromStorage(STORAGE_KEYS.saved).forEach(addSavedRecipeToPanel);
+
+// Builds one clickable row for the "Your Shared Recipes" panel list.
 function addSharedRecipeToPanel(recipe) {
-  const list = document.querySelectorAll('.panel-section .panel-list')[1]; // "your Shared recipe" list
+  const list = document.getElementById('sharedRecipesPanelList');
+  const emptyMsg = list.querySelector('.panel-empty');
+  if (emptyMsg) emptyMsg.remove();
+
   const li = document.createElement('li');
-  li.textContent = `🍽️ ${recipe.recipeName}`;
+  li.className = 'panel-recipe-item';
+  li.innerHTML = `
+    <div class="panel-recipe-icon">🍽️</div>
+    <div class="panel-recipe-info">
+      <span class="panel-recipe-title">${recipe.recipeName}</span>
+      <span class="panel-recipe-meta">${recipe.cuisine || ''}${recipe.prepTime ? ' • ' + recipe.prepTime + ' mins' : ''}</span>
+    </div>
+  `;
+  li.addEventListener('click', () => {
+    openSharedRecipeDetail(recipe);
+    userPanel.classList.remove('open');
+  });
+
   list.appendChild(li);
+}
+
+// Shared helper: turns a shared_recipes row into the shape openRecipeDetail expects.
+function openSharedRecipeDetail(recipe) {
+  openRecipeDetail({
+    title: recipe.recipeName,
+    emoji: '🍽️',
+    meta: `${recipe.cuisine} • ${recipe.prepTime} mins`,
+    ingredients: recipe.ingredients.split('\n').filter(Boolean),
+    steps: recipe.steps.split('\n').filter(Boolean)
+  });
 }
 
 function addSharedRecipeToBook(recipe) {
@@ -1246,13 +1308,7 @@ function addSharedRecipeToBook(recipe) {
     </div>
   `;
   entry.addEventListener('click', () => {
-    openRecipeDetail({
-      title: recipe.recipeName,
-      emoji: '🍽️',
-      meta: `${recipe.cuisine} • ${recipe.prepTime} mins`,
-      ingredients: recipe.ingredients.split('\n').filter(Boolean),
-      steps: recipe.steps.split('\n').filter(Boolean)
-    });
+    openSharedRecipeDetail(recipe);
   });
   list.appendChild(entry);
 }
