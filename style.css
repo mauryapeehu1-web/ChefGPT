@@ -112,15 +112,22 @@ body {
     opacity: 1;
   }
 }
-.add-custom{
-    background:#ff6b4a;
-    color:white;
-    font-weight:bold;
-    border:2px dashed white;
+/* Update your custom add button class/ID here */
+.add-custom-btn {
+  background-color: #eaf5eb; /* Your current pale green */
+  color: #2b5c38; /* Changed from white to a dark, readable green */
+  border: 1px solid transparent;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
-.add-custom:hover{
-    transform:scale(1.03);
+/* Add a hover effect so it feels interactive */
+.add-custom-btn:hover {
+  background-color: #d1e8d5;
+  border-color: #2b5c38;
 }
 
 .tracking-in-contract-bck {
