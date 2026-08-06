@@ -852,19 +852,25 @@ function renderGrid() {
 function renderSelectedTray() {
   selectedCountEl.textContent = `${selectedIngredients.length} ingredient${selectedIngredients.length === 1 ? '' : 's'} selected`;
 
+  // 1. Properly close the map function and join the array into an HTML string
   selectedChipsEl.innerHTML = selectedIngredients.map(name => {
+    // 2. Look up the ingredient object to get the correct emoji (or default to ✨ for custom ones)
+    const ing = INGREDIENTS.find(i => i.name === name);
     const emoji = ing ? ing.emoji : "✨";
 
-return `
-<span class="selected-chip">
-${emoji} ${name}
-<button data-name="${name}">✕</button>
-</span>
-`;
+    return `
+    <span class="selected-chip">
+      ${emoji} ${name}
+      <button data-name="${name}">✕</button>
+    </span>
+    `;
+  }).join(''); // <--- Added the missing closing bracket and join('')
+
+  // 3. Attach the event listeners AFTER the HTML string is properly closed and set
   selectedChipsEl.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => toggleIngredient(btn.dataset.name));
-    
   });
+  
   checkTypeCompatibility();
 }
 clearSelectedEl.addEventListener('click', () => {
