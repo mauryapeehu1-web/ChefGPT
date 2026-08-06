@@ -68,6 +68,8 @@ function applyAuthUI(user) {
     userPanel.classList.remove('open');
   }
   refreshNewsletterUI();
+  renderSavedRecipesPanel();
+  renderSharedRecipesPanel();
 }
 
 // Restore session on page load (e.g. after a refresh).
@@ -264,7 +266,8 @@ recipeForm.addEventListener('submit', async (e) => {
     ingredients: recipe.ingredients,
     steps: recipe.steps,
     prep_time: recipe.prepTime,
-    image_url: recipe.imageUrl || null
+    image_url: recipe.imageUrl || null,
+    user_id: currentUser ? currentUser.id : null
   });
 
   submitBtn.disabled = false;
@@ -275,8 +278,10 @@ recipeForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  addSharedRecipeToPanel(recipe);
+  const savedRow = { ...recipe, user_id: currentUser ? currentUser.id : null };
+  allSharedRecipes.push(savedRow);
   addSharedRecipeToBook(recipe);
+  if (currentUser) addSharedRecipeToPanel(recipe);
 
   alert(`Thanks! "${recipe.recipeName}" was submitted.`);
   recipeForm.reset();
@@ -1221,17 +1226,23 @@ async function fetchDrinkRecipe(title) {
     quickRecipeMeta.textContent = 'Sorry, could not load this recipe. Please try again.';
   }
 }
-const STORAGE_KEYS = { saved: 'chefgpt_saved_recipes', shared: 'chefgpt_shared_recipes', recent: 'chefgpt_recent_searches' };
+const STORAGE_KEYS = { recent: 'chefgpt_recent_searches' };
 function loadFromStorage(key) {
   try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; }
 }
 function saveToStorage(key, data) {
   localStorage.setItem(key, JSON.stringify(data));
 }
+
+function savedStorageKey() {
+  return currentUser ? `chefgpt_saved_recipes_${currentUser.id}` : 'chefgpt_saved_recipes_guest';
+}
+
 document.getElementById('saveRecipeBtn').addEventListener('click', () => {
   if (!currentOpenRecipe) return;
 
-  const saved = loadFromStorage(STORAGE_KEYS.saved);
+  const key = savedStorageKey();
+  const saved = loadFromStorage(key);
   const alreadySaved = saved.some(r => r.title === currentOpenRecipe.title);
 
   if (alreadySaved) {
@@ -1240,7 +1251,7 @@ document.getElementById('saveRecipeBtn').addEventListener('click', () => {
   }
 
   saved.push(currentOpenRecipe);
-  saveToStorage(STORAGE_KEYS.saved, saved);
+  saveToStorage(key, saved);
   addSavedRecipeToPanel(currentOpenRecipe);
   alert(`"${currentOpenRecipe.title}" saved to your recipes!`);
 });
@@ -1268,11 +1279,11 @@ function addSavedRecipeToPanel(recipe) {
     userPanel.classList.remove('open');
   });
 
-  // The ✕ button removes it without opening the recipe.
   li.querySelector('.panel-recipe-remove').addEventListener('click', (e) => {
     e.stopPropagation();
-    const remaining = loadFromStorage(STORAGE_KEYS.saved).filter(r => r.title !== recipe.title);
-    saveToStorage(STORAGE_KEYS.saved, remaining);
+    const key = savedStorageKey();
+    const remaining = loadFromStorage(key).filter(r => r.title !== recipe.title);
+    saveToStorage(key, remaining);
     li.remove();
     if (!list.querySelector('.panel-recipe-item')) {
       list.innerHTML = '<li class="panel-empty">No saved recipes yet — hit 💾 Save on any recipe to keep it here.</li>';
@@ -1282,9 +1293,13 @@ function addSavedRecipeToPanel(recipe) {
   list.appendChild(li);
 }
 
-// Reload previously saved recipes when the page loads
-loadFromStorage(STORAGE_KEYS.saved).forEach(addSavedRecipeToPanel);
+function renderSavedRecipesPanel() {
+  const list = document.getElementById('savedRecipesPanelList');
+  list.innerHTML = '<li class="panel-empty">No saved recipes yet — hit 💾 Save on any recipe to keep it here.</li>';
+  loadFromStorage(savedStorageKey()).forEach(addSavedRecipeToPanel);
+}
 
+renderSavedRecipesPanel();
 // Builds one clickable row for the "Your Shared Recipes" panel list.
 function addSharedRecipeToPanel(recipe) {
   const list = document.getElementById('sharedRecipesPanelList');
@@ -1340,6 +1355,8 @@ function addSharedRecipeToBook(recipe) {
   list.appendChild(entry);
 }
 
+let allSharedRecipes = [];
+
 async function loadSharedRecipes() {
   const { data, error } = await supabaseClient
     .from('shared_recipes')
@@ -1351,18 +1368,29 @@ async function loadSharedRecipes() {
     return;
   }
 
-  data.forEach(row => {
-    const recipe = {
-      recipeName: row.recipe_name,
-      cuisine: row.cuisine,
-      ingredients: row.ingredients,
-      steps: row.steps,
-      prepTime: row.prep_time,
-      imageUrl: row.image_url
-    };
-    addSharedRecipeToPanel(recipe);
-    addSharedRecipeToBook(recipe);
-  });
+  allSharedRecipes = data.map(row => ({
+    recipeName: row.recipe_name,
+    cuisine: row.cuisine,
+    ingredients: row.ingredients,
+    steps: row.steps,
+    prepTime: row.prep_time,
+    imageUrl: row.image_url,
+    user_id: row.user_id
+  }));
+
+  allSharedRecipes.forEach(addSharedRecipeToBook);
+  renderSharedRecipesPanel();
+}
+
+function renderSharedRecipesPanel() {
+  const list = document.getElementById('sharedRecipesPanelList');
+  list.innerHTML = '<li class="panel-empty">You haven\'t shared a recipe yet.</li>';
+
+  if (!currentUser) return;
+
+  allSharedRecipes
+    .filter(r => r.user_id === currentUser.id)
+    .forEach(addSharedRecipeToPanel);
 }
 
 loadSharedRecipes();
