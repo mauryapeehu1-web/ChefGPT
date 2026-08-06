@@ -761,6 +761,11 @@ const clearSelectedEl = document.getElementById('clearSelected');
 let selectedIngredients = [];
 
 function toggleIngredient(name) {
+  name = name
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+
   const index = selectedIngredients.indexOf(name);
 
   if (index > -1) {
@@ -769,38 +774,93 @@ function toggleIngredient(name) {
     selectedIngredients.push(name);
   }
 
-  console.log('Currently selected:', selectedIngredients);
   renderGrid();
   renderSelectedTray();
 }
 
 function renderGrid() {
+
   const filtered = INGREDIENTS.filter(ing => {
-    const matchesCategory = activeCategory === 'All' || ing.category === activeCategory;
-    const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      activeCategory === "All" || ing.category === activeCategory;
+
+    const matchesSearch =
+      ing.name.toLowerCase().includes(searchTerm.toLowerCase());
+
     return matchesCategory && matchesSearch;
   });
-  ingredientGridEl.innerHTML = filtered.map(ing => {
-    const isSelected = selectedIngredients.includes(ing.name);
-    return `<button class="ingredient-chip${isSelected ? ' selected' : ''}" data-name="${ing.name}">
-      <span class="chip-emoji">${ing.emoji}</span>
-      <span class="chip-name">${ing.name}</span>
-    </button>`;
-  }).join('');
-  document.querySelectorAll('.ingredient-chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    toggleIngredient(chip.dataset.name);
+
+  // No results → show Add button
+  if (
+    filtered.length === 0 &&
+    searchTerm.trim() !== ""
+  ) {
+
+    ingredientGridEl.innerHTML = `
+      <button class="ingredient-chip add-custom" id="addCustomIngredient">
+        ➕ Add "${searchTerm.trim()}"
+      </button>
+    `;
+
+    document
+      .getElementById("addCustomIngredient")
+      .addEventListener("click", () => {
+
+        const custom =
+          searchTerm
+            .trim()
+            .replace(/\s+/g, " ")
+            .replace(/\b\w/g, c => c.toUpperCase());
+
+        if (!selectedIngredients.includes(custom)) {
+          selectedIngredients.push(custom);
+        }
+
+        ingredientSearchEl.value = "";
+        searchTerm = "";
+
+        renderGrid();
+        renderSelectedTray();
+      });
+
+    return;
+  }
+
+  ingredientGridEl.innerHTML = filtered
+    .map(ing => {
+
+      const isSelected =
+        selectedIngredients.includes(ing.name);
+
+      return `
+      <button class="ingredient-chip${isSelected ? " selected" : ""}" data-name="${ing.name}">
+          <span class="chip-emoji">${ing.emoji}</span>
+          <span class="chip-name">${ing.name}</span>
+      </button>
+      `;
+
+    })
+    .join("");
+
+  document.querySelectorAll(".ingredient-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      toggleIngredient(chip.dataset.name);
+    });
   });
-});
+
 }
 function renderSelectedTray() {
   selectedCountEl.textContent = `${selectedIngredients.length} ingredient${selectedIngredients.length === 1 ? '' : 's'} selected`;
 
   selectedChipsEl.innerHTML = selectedIngredients.map(name => {
-    const ing = INGREDIENTS.find(i => i.name === name);
-    return `<span class="selected-chip">${ing.emoji} ${name} <button data-name="${name}">✕</button></span>`;
-  }).join('');
+    const emoji = ing ? ing.emoji : "✨";
 
+return `
+<span class="selected-chip">
+${emoji} ${name}
+<button data-name="${name}">✕</button>
+</span>
+`;
   selectedChipsEl.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => toggleIngredient(btn.dataset.name));
     
@@ -809,7 +869,7 @@ function renderSelectedTray() {
 }
 clearSelectedEl.addEventListener('click', () => {
   selectedIngredients = [];
-   console.log('Mapped ingredients:', INGREDIENTS);
+  console.log('Mapped ingredients:', INGREDIENTS);
   renderTabs()
   renderGrid();
   renderSelectedTray();

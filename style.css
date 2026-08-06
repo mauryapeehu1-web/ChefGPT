@@ -112,6 +112,16 @@ body {
     opacity: 1;
   }
 }
+.add-custom{
+    background:#ff6b4a;
+    color:white;
+    font-weight:bold;
+    border:2px dashed white;
+}
+
+.add-custom:hover{
+    transform:scale(1.03);
+}
 
 .tracking-in-contract-bck {
 	-webkit-animation: tracking-in-contract-bck 3s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
